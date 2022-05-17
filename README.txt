@@ -31,10 +31,11 @@
 (+) Prevent users to edit posts that they do not own
 
 (6) Create models.Post
-(+) Fields: poster, content, created_on
+(+) Fields: poster, content, created_on, edited
 (+) poster: many-to-one relationship with models.User id
 (+) content: textarea, max length of 150 characters
 (+) created_on: date and time when post was submited
+(+) edited: track if post was edited or not
 
 (7) Create models.Follow
 (+) Fields: follower, followed, active
@@ -50,12 +51,6 @@
 
 ---
 URLs
-
-GET network/index
-Sending a GET request to network/index will retrieve all posts and return a JsonResponse as below:
-{
-    "posts": [<str>]
-}
 
 GET network/login
 Sending a GET request to /login will return "network/login.html" where user can fill and submit the login form
@@ -89,12 +84,29 @@ Request body:
     "confirmation": <str>
 }
 
+GET network/index
+Sending a GET request to network/index requesting to retrieve All page posts will return "index.html" passing context:
+{
+    "posts": [<str>]
+}
+
+PUT network/index
+Sending a PUT request to network/index requesting to update posts on next/previous page will return a JsonResponse as below:
+{
+    "posts": [<str>]
+}
+Request body:
+{
+    "page": <int>
+}
+
 GET network/<str:username>
 Sending a GET request to network/<str:username> will return "profile.html" passing context:
 {
     "username": <str>,
     "followers": [<int>],
-    "following": [<int>]
+    "following": [<int>],
+    "posts": [<str>]
 }
 
 PUT network/<str:username>
@@ -104,13 +116,13 @@ Request body:
     "active": "True"/"False"
 }
 
-GET network/posts
-Sending a GET request to network/posts requesting to retrieve posts for Profile page, All Posts page or Following page will return a JsonResponse as below:
+GET network/following
+Sending a GET request to network/following requesting to retrieve Following page posts will return "index.html" passing context:
 {
     "posts": [<str>]
 }
 
-PUT network/posts
+PUT network/following
 Sending a PUT request to network/posts requesting to update posts on next/previous page will return a JsonResponse as below:
 {
     "posts": [<str>]
