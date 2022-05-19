@@ -1,10 +1,11 @@
+import json
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
 
-from .models import User
+from .models import User, Post
 
 
 def index(request):
@@ -61,3 +62,29 @@ def register(request):
         return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "network/register.html")
+
+
+def new(request):
+    # If method is not POST, return error message and status 400 (Bad Request)
+    if request.method != "POST":
+        return JsonResponse({"message": "POST request required."}, status=400)
+
+    # Get content
+    data = json.loads(request.body)
+    content = data.get("content", "")
+    # Get poster
+    poster = User.objects.get(username=request.user)
+    # Create post, without saving it yet
+    post = Post(poster=poster, content=content)
+    # Check if it is valid
+    if post.is_valid_post() == True:
+        # Attempt to create post
+        try:
+            post.save()
+        # If creation unsuccessful, return error message and status 500 (Internal Server Error)
+        except IntegrityError:
+            return JsonResponse({"message": "Post could not be saved."}, status=500)
+        # If creation successful, return success message and status 201 (Created)
+        return JsonResponse({"message": "Post created successfully."}, status=201)
+
+    return JsonResponse({"message": "Content cannot be empty nor contain more than 150 characters."}, status=400)

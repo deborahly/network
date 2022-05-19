@@ -1,5 +1,18 @@
 {% extends "network/layout.html" %}
 
 {% block body %}
-    TODO
+    <section id="new-post">
+        <h3>Create new post</h3>
+        
+        <form id="new-post-form">
+            {% csrf_token %}
+            <div class="form-group">
+                <input id="new-post-content" type="text" class="form-control" aria-describedby="contentHelp" placeholder="Say it to the Internet">
+                <small id="contentHelp" class="form-text text-muted">Be mindful with personal information disclosure.</small>
+            </div>
+            <button id="new-post-button" type="submit" class="btn btn-primary">Post</button>
+        </form>
+
+        <div id="new-post-message"></div>
+    </section>
 {% endblock %}
