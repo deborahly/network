@@ -1,0 +1,31 @@
+{% extends "network/layout.html" %}
+
+{% block title %}Profile{% endblock %}
+
+{% block body %}
+    <section id="profile">
+        <h3>{{ user.username }}</h3>
+        
+        <h5>Followers: {{ user.followers }}</h5>
+
+        <h5>Following: {{ user.following }}</h5>
+
+        <div id="profile-message"></div>
+    </section>
+
+    <section id="posts">
+        <div id="posts-message"></div>
+        
+        <h3>Following posts</h3>
+
+        <div id="posts-list">    
+        </div>
+
+        <nav aria-label="Page navigation">
+            <ul class="pagination">
+                <li class="page-item"><button id="previous">Previous</button></li>
+                <li class="page-item"><button id="next">Next</button></li>
+            </ul>   
+        </nav>
+    </section>
+{% endblock %}

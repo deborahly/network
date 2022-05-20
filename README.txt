@@ -52,10 +52,10 @@
 ---
 URLs
 
-GET network/login
+GET /login
 Sending a GET request to /login will return "network/login.html" where user can fill and submit the login form
 
-POST network/login
+POST /login
 Sending a POST request to /login will attempt to sign user in
     If authentication not successful, server will return "network/login.html" passing message "Invalid username and/or password."
     If authentication successful, server will log user in and redirect user to index
@@ -65,13 +65,13 @@ Request body:
     "password": <str>
 }
 
-GET network/logout
+GET /logout
 Sending a GET request to /logout will log user out and redirect user to index
 
-GET network/register
+GET /register
 Sending a GET request to /register will return "network/register.html" where user can fill and submit the register form
 
-POST network/register
+POST /register
 Sending a POST request to /register will attempt to register user
     If password and password confirmation do not match, server will return "network/register.html" passing message "Passwords must match."
     If unable to save new user for username already taken, server will return "network/register.html" passing message "Username already taken."
@@ -84,46 +84,66 @@ Request body:
     "confirmation": <str>
 }
 
-GET network/index
-Sending a GET request to network/index requesting to retrieve All page posts will return "index.html" passing context:
+GET /index
+Sending a GET request to network/index will return "index.html"
+
+GET /posts/<int:page>
+Sending a GET request to /posts requesting to retrieve posts will return a JsonResponse as below:
 {
-    "posts": [<str>]
+    "page": {
+        "current": <int>,
+        "has_next": <bool>,
+        "has_previous": <bool>
+    },
+    "posts": [{
+        "id": <int>,
+        "poster": <str>,
+        "content": <str>,
+        "created_on": <str>,
+        "edited": <bool>
+    }],
 }
 
-PUT network/index
-Sending a PUT request to network/index requesting to update posts on next/previous page will return a JsonResponse as below:
-{
-    "posts": [<str>]
-}
-Request body:
-{
-    "page": <int>
-}
-
-GET network/<str:username>
-Sending a GET request to network/<str:username> will return "profile.html" passing context:
+GET /<str:username>
+Sending a GET request to /<str:username> will return "profile.html" passing context:
 {
     "username": <str>,
-    "followers": [<int>],
-    "following": [<int>],
-    "posts": [<str>]
+    "followers": <int>,
+    "following": <int>
 }
 
-PUT network/<str:username>
-Sending a PUT request to network/<str:username> requesting to update follow/unfollow will return the HttpResponse(status=204)
+GET /<str:username>/posts
+Sending a GET request to /<str:username>/posts requesting to retrieve posts by a certain user will return a JsonResponse as below:
+{
+    "page": {
+        "current": <int>,
+        "has_next": <bool>,
+        "has_previous": <bool>
+    },
+    "posts": [{
+        "id": <int>,
+        "poster": <str>,
+        "content": <str>,
+        "created_on": <str>,
+        "edited": <bool>
+    }],
+}
+
+PUT /<str:username>
+Sending a PUT request to /<str:username> requesting to update follow/unfollow will return the HttpResponse(status=204)
 Request body:
 {
     "active": "True"/"False"
 }
 
-GET network/following
-Sending a GET request to network/following requesting to retrieve Following page posts will return "index.html" passing context:
+GET /following
+Sending a GET request to /following requesting to retrieve Following page posts will return "index.html" passing context:
 {
     "posts": [<str>]
 }
 
-PUT network/following
-Sending a PUT request to network/posts requesting to update posts on next/previous page will return a JsonResponse as below:
+PUT /following
+Sending a PUT request to /posts requesting to update posts on next/previous page will return a JsonResponse as below:
 {
     "posts": [<str>]
 }
@@ -132,8 +152,8 @@ Request body:
     "page": <int>
 }
 
-POST network/new-post
-Sending a POST request to network/new-post requesting to create a post will return a JsonResponse as below:
+POST /new-post
+Sending a POST request to /new-post requesting to create a post will return a JsonResponse as below:
 {
     "message": "Post created successfully.",
     status=201
@@ -143,8 +163,8 @@ Request body:
     "content": <str>
 }
 
-PUT network/<int:post_id>
-Sending a PUT request to network/<int:post_id> requesting to update a post will return a JsonResponse as below:
+PUT /<int:post_id>
+Sending a PUT request to /<int:post_id> requesting to update a post will return a JsonResponse as below:
 {
     "message": "Post edited successfully.",
     status=204
@@ -154,7 +174,7 @@ Request body:
     "content": <str>
 }
 
-PUT network/<int:post_id>
+PUT /<int:post_id>
 Sending a PUT request to network/<int:post_id> requesting to update like/unlike will return the HttpResponse(status=204)
 Request body:
 {
