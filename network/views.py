@@ -4,12 +4,46 @@ from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
+from django.core.paginator import Paginator
 
 from .models import User, Post
 
 
 def index(request):
+
     return render(request, "network/index.html")
+
+
+def posts(request, page):
+    # if request.method != "PUT":
+    #     return JsonResponse({"error": "POST request required."}, status=400)
+    
+    # # Get data from request body
+    # data = json.loads(request.body)
+    
+    # Retrieve posts from database
+    posts = Post.objects.all().order_by("-created_on")
+    
+    # Add paginator
+    page_number = page
+    per_page = 2
+    paginator = Paginator(posts, per_page)
+    page_object = paginator.get_page(page_number)
+
+    # page_number = 1
+    # paginator = Paginator(posts, 2)
+    # page_object = paginator.get_page(page_number)
+
+    payload = {
+        "page": {
+            "current": page_object.number,
+            "has_next": page_object.has_next(),
+            "has_previous": page_object.has_previous(), 
+        },
+        "posts": [post.serialize() for post in page_object.object_list],
+    }
+
+    return JsonResponse(payload, safe=False)
 
 
 def login_view(request):

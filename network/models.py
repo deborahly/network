@@ -12,7 +12,16 @@ class Post(models.Model):
     edited = models.BooleanField(default=False)
     
     def __str__(self):
-        return f'{self.content}'
+        return f"{self.content}"
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "poster": self.poster.username,
+            "content": self.content,
+            "created_on": self.created_on.strftime("%b %d %Y, %I:%M %p"),
+            "edited": self.edited
+        }
 
     def is_valid_post(self):
         return self.content != "" and len(self.content) <= 150

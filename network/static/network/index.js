@@ -1,14 +1,59 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // By default, load All Posts
+    // Load page 1 of All Posts by default
+    var page_index = 1;
+    loadPosts(page_index);
 
     // Create post when form is submitted
     document.querySelector('#new-post-form').addEventListener('submit', (event) => {
         event.preventDefault();
-        save_post();
+        savePost();
     });
+
+    // Require posts when next/previous button is clicked
+    document.querySelector('#previous').addEventListener('click', (event) => {
+        event.preventDefault();
+        page_index--;
+        loadPosts(page_index);
+    })
+
+    document.querySelector('#next').addEventListener('click', (event) => {
+        event.preventDefault();
+        page_index++;
+        loadPosts(page_index);
+    })
 });
 
-function save_post() {
+function loadPosts(page) {
+    // Clear out
+    document.querySelector('#posts-list').innerHTML = '';
+    
+    fetch(`http://127.0.0.1:8000/posts/${page}`)
+    .then(response => response.json())
+    .then(data => {
+
+        for (let i = 0; i < data.posts.length; i++) {
+            const card = document.createElement('div');
+            card.classList.add("card");
+
+            const card_header = document.createElement('div');
+            card_header.classList.add("card-header");
+
+            const card_body = document.createElement('div');
+            card_body.classList.add("card-body");
+
+            const posts_list = document.querySelector('#posts-list');            
+
+            card.append(card_header);
+            card.append(card_body);
+            posts_list.append(card);
+
+            card_header.innerHTML = data.posts[i]['poster'];
+            card_body.innerHTML = data.posts[i]['content'];  
+        }
+    });
+}
+
+function savePost() {
     const csrftoken = getCookie('csrftoken');
     
     const content = document.querySelector('#new-post-content').value;
