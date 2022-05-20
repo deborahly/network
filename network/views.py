@@ -14,25 +14,44 @@ def index(request):
     return render(request, "network/index.html")
 
 
-def posts(request, page):
-    # if request.method != "PUT":
-    #     return JsonResponse({"error": "POST request required."}, status=400)
+def profile(request, username):
+
+    return render(request, "network/profile.html")
+
+# def posts(request, page):    
+#     # Retrieve posts from database
+#     posts = Post.objects.all().order_by("-created_on")
     
-    # # Get data from request body
-    # data = json.loads(request.body)
+#     # Add paginator
+#     page_number = page
+#     per_page = 2
+#     paginator = Paginator(posts, per_page)
+#     page_object = paginator.get_page(page_number)
+
+#     payload = {
+#         "page": {
+#             "current": page_object.number,
+#             "has_next": page_object.has_next(),
+#             "has_previous": page_object.has_previous()
+#         },
+#         "posts": [post.serialize() for post in page_object.object_list]
+#     }
+
+#     return JsonResponse(payload, safe=False)
+
+def posts(request):    
+    # Get parameters
+    page_number = request.GET.get("page", "")
+    view = request.GET.get("view", "")
     
     # Retrieve posts from database
-    posts = Post.objects.all().order_by("-created_on")
+    if view == "all":
+        posts = Post.objects.all().order_by("-created_on")
     
     # Add paginator
-    page_number = page
     per_page = 2
     paginator = Paginator(posts, per_page)
     page_object = paginator.get_page(page_number)
-
-    # page_number = 1
-    # paginator = Paginator(posts, 2)
-    # page_object = paginator.get_page(page_number)
 
     payload = {
         "page": {
@@ -44,7 +63,6 @@ def posts(request, page):
     }
 
     return JsonResponse(payload, safe=False)
-
 
 def login_view(request):
     if request.method == "POST":
