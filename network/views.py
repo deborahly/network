@@ -38,9 +38,9 @@ def posts(request, page):
         "page": {
             "current": page_object.number,
             "has_next": page_object.has_next(),
-            "has_previous": page_object.has_previous(), 
+            "has_previous": page_object.has_previous()
         },
-        "posts": [post.serialize() for post in page_object.object_list],
+        "posts": [post.serialize() for post in page_object.object_list]
     }
 
     return JsonResponse(payload, safe=False)

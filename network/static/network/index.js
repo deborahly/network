@@ -48,7 +48,19 @@ function loadPosts(page) {
             posts_list.append(card);
 
             card_header.innerHTML = data.posts[i]['poster'];
-            card_body.innerHTML = data.posts[i]['content'];  
+            card_body.innerHTML = data.posts[i]['content'];
+        }
+
+        if (data.page.has_previous === false) {
+            document.querySelector('#previous').setAttribute('disabled', 'true');
+        } else {
+            document.querySelector('#previous').removeAttribute('disabled');
+        }
+
+        if (data.page.has_next === false) {
+            document.querySelector('#next').setAttribute('disabled', 'true');
+        } else {
+            document.querySelector('#next').removeAttribute('disabled');
         }
     });
 }
