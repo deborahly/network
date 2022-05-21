@@ -18,35 +18,20 @@ def profile(request, username):
 
     return render(request, "network/profile.html")
 
-# def posts(request, page):    
-#     # Retrieve posts from database
-#     posts = Post.objects.all().order_by("-created_on")
-    
-#     # Add paginator
-#     page_number = page
-#     per_page = 2
-#     paginator = Paginator(posts, per_page)
-#     page_object = paginator.get_page(page_number)
 
-#     payload = {
-#         "page": {
-#             "current": page_object.number,
-#             "has_next": page_object.has_next(),
-#             "has_previous": page_object.has_previous()
-#         },
-#         "posts": [post.serialize() for post in page_object.object_list]
-#     }
-
-#     return JsonResponse(payload, safe=False)
-
-def posts(request):    
+def posts(request):
     # Get parameters
     page_number = request.GET.get("page", "")
     view = request.GET.get("view", "")
+    username = request.GET.get("username", "")
     
     # Retrieve posts from database
     if view == "all":
         posts = Post.objects.all().order_by("-created_on")
+    
+    if view == "profile":
+        poster = User.objects.get(username=username)
+        posts = Post.objects.filter(poster=poster)
     
     # Add paginator
     per_page = 2
