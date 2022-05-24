@@ -4,11 +4,11 @@
 
 {% block body %}
     <section id="profile">
-        <h3>{{ user.username }}</h3>
+        <h3 id="profile-username" data-id="{{ profile_user.username }}">{{ profile_user.username }}</h3>
         
-        <h5>Followers: {{ user.followers }}</h5>
+        <h5>Followers: {{ profile_user.followers }}</h5>
 
-        <h5>Following: {{ user.following }}</h5>
+        <h5>Following: {{ profile_user.following }}</h5>
 
         <div id="profile-message"></div>
     </section>
@@ -16,7 +16,7 @@
     <section id="posts">
         <div id="posts-message"></div>
         
-        <h3>Following posts</h3>
+        <h3>My posts</h3>
 
         <div id="posts-list" class="posts-list">    
         </div>
@@ -27,5 +27,14 @@
                 <li class="page-item"><button id="next">Next</button></li>
             </ul>   
         </nav>
+    </section>
+
+    <section id="follow">
+        {% if user.is_authenticated %}
+            {% csrf_token %} 
+            <button id="follow-btn" data-active="False">
+                Follow
+            </button>
+        {% endif %}
     </section>
 {% endblock %}

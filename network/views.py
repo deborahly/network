@@ -1,4 +1,5 @@
 import json
+from multiprocessing.spawn import is_forking
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
@@ -6,7 +7,7 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.core.paginator import Paginator
 
-from .models import User, Post
+from .models import User, Post, Follow
 
 
 def index(request):
@@ -15,8 +16,43 @@ def index(request):
 
 
 def profile(request, username):
+    profile_user = User.objects.get(username=username)
 
-    return render(request, "network/profile.html")
+    if request.method == "PUT":
+        data = json.loads(request.body)
+        active = data.get("active", "")
+        # If now following: False -> True
+        if active == "False":
+            try:
+                f = Follow.objects.get(follower=request.user, followed=profile_user)
+            # If first time following, create new follow
+            except:
+                new_f = Follow.objects.create(follower=request.user, followed=profile_user)
+                new_f.save()
+                return JsonResponse({
+                    "message": f"{request.user} is now following {profile_user}.",
+                    "active": "True"
+                }, status=200)
+            # If not first time following, update follow
+            f.active = True
+            f.save()
+            return JsonResponse({
+                "message": f"{request.user} is now following {profile_user}.",
+                "active": "True"
+            }, status=201)
+        # If now unfollowing: True -> False
+        else:
+            f = Follow.objects.get(follower=request.user, followed=profile_user)
+            f.active = False
+            f.save()
+            return JsonResponse({
+                "message": f"{request.user} is not following {profile_user}.",
+                "active": "False"
+            }, status=200)
+
+    return render(request, "network/profile.html", {
+        "profile_user": profile_user
+    })
 
 
 def posts(request):

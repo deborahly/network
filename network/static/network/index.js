@@ -20,16 +20,18 @@ document.addEventListener('DOMContentLoaded', function() {
         loadIndexOnce();
     }
 
-    // Load page 1 of Profile Posts when a profile is clicked on
-    // let user = document.querySelector('#user');
-    // let username = user.innerHTML;
-    // user.addEventListener('click', loadPosts('profile', page_index, username), false);
-
-    document.querySelector('#user').addEventListener('click', (event) => {
-        username = event.target.innerHTML;
+    // Load page 1 of Profile when page is loaded   
+    if (document.title == 'Profile') { 
+        username = document.querySelector('#profile-username').dataset.id;
         loadPosts('profile', page_index, username);
-    })
 
+        // Follow/unfollow when requested
+        document.querySelector('#follow-btn').addEventListener('click', (event) => {
+            active = event.target.dataset.active;
+            follow(username, active);
+        });
+    }
+    
     // Create post when form is submitted
     if (document.title === 'Index') {
         document.querySelector('#new-post-form').addEventListener('submit', (event) => {
@@ -42,10 +44,10 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelector('#previous').addEventListener('click', (event) => {
         event.preventDefault();
         page_index--;
-        if (document.title === 'Index') {
+        if (title === 'Index') {
             loadPosts('all', page_index, '');
         }
-        if (document.title === 'Profile') {
+        if (title === 'Profile') {
             loadPosts('profile', page_index, username);
         }
     })
@@ -53,58 +55,15 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelector('#next').addEventListener('click', (event) => {
         event.preventDefault();
         page_index++;
-        if (document.title === 'Index') {
+        if (title === 'Index') {
             loadPosts('all', page_index, '');
         }
-        if (document.title === 'Profile') {
+        if (title === 'Profile') {
             loadPosts('profile', page_index, username);
         }
     })
 });
 
-
-// function loadPosts(page) {
-//     // Clear out
-//     document.querySelector('#posts-list').innerHTML = '';
-    
-//     fetch(`http://127.0.0.1:8000/posts/${page}`)
-//     .then(response => response.json())
-//     .then(data => {
-
-//         for (let i = 0; i < data.posts.length; i++) {
-//             const card = document.createElement('div');
-//             card.classList.add("card");
-
-//             const card_header = document.createElement('div');
-//             card_header.classList.add("card-header");
-
-//             const card_body = document.createElement('div');
-//             card_body.classList.add("card-body");
-
-//             const posts_list = document.querySelector('#posts-list');            
-
-//             card.append(card_header);
-//             card.append(card_body);
-//             posts_list.append(card);
-
-//             card_header.innerHTML = data.posts[i]['poster'];
-//             card_body.innerHTML = data.posts[i]['content'];
-//         }
-
-//         if (data.page.has_previous === false) {
-//             document.querySelector('#previous').setAttribute('disabled', 'true');
-//         } else {
-//             document.querySelector('#previous').removeAttribute('disabled');
-//         }
-
-//         if (data.page.has_next === false) {
-//             document.querySelector('#next').setAttribute('disabled', 'true');
-//         } else {
-//             document.querySelector('#next').removeAttribute('disabled');
-//         }
-//     });
-// }
-
 function loadPosts(view, page, username) {    
     // Clear out
     document.querySelector('.posts-list').innerHTML = '';
@@ -117,65 +76,25 @@ function loadPosts(view, page, username) {
             card.classList.add("card");
 
             const card_header = document.createElement('div');
-            card_header.classList.add("card-header");
+            card_header.classList.add('card-header');
 
             const card_body = document.createElement('div');
-            card_body.classList.add("card-body");
+            card_body.classList.add('card-body');
+
+            const link = document.createElement('a');
+            link.setAttribute('href', `/${data.posts[i]['poster']}`);
+            link.classList.add('nav-link');
+            link.dataset.id = data.posts[i]['poster'];
+
+            link.innerHTML = data.posts[i]['poster'];
+            card_body.innerHTML = data.posts[i]['content'];
 
             const posts_list = document.querySelector('#posts-list');            
 
             card.append(card_header);
             card.append(card_body);
+            card_header.append(link);
             posts_list.append(card);
-
-            card_header.innerHTML = data.posts[i]['poster'];
-            card_body.innerHTML = data.posts[i]['content'];
-            console.log(data.posts[i]);
-        }
-        
-        if (data.page.has_previous === false) {
-            document.querySelector('#previous').setAttribute('disabled', 'true');
-        } else {
-            document.querySelector('#previous').removeAttribute('disabled');
-        }
-
-        if (data.page.has_next === false) {
-            document.querySelector('#next').setAttribute('disabled', 'true');
-        } else {
-            document.querySelector('#next').removeAttribute('disabled');
-        }
-    })
-    .catch((error) => {
-        console.error('Error:', error);
-    });
-}
-
-function loadPosts(view, page, username) {    
-    // Clear out
-    document.querySelector('.posts-list').innerHTML = '';
-
-    fetch(`http://127.0.0.1:8000/posts/?view=${view}&page=${page}&username=${username}`)
-    .then(response => response.json()) 
-    .then(data => {
-        for (let i = 0; i < data.posts.length; i++) {
-            const card = document.createElement('div');
-            card.classList.add("card");
-
-            const card_header = document.createElement('div');
-            card_header.classList.add("card-header");
-
-            const card_body = document.createElement('div');
-            card_body.classList.add("card-body");
-
-            const posts_list = document.querySelector('#posts-list');            
-
-            card.append(card_header);
-            card.append(card_body);
-            posts_list.append(card);
-
-            card_header.innerHTML = data.posts[i]['poster'];
-            card_body.innerHTML = data.posts[i]['content'];
-            console.log(data.posts[i]);
         }
         
         if (data.page.has_previous === false) {
@@ -240,4 +159,42 @@ function getCookie(name) {
         }
     }
     return cookieValue;
+}
+
+function follow(username, active) {
+    const csrftoken = getCookie('csrftoken');
+    
+    const json_body = {
+        active: active
+    }
+
+    const requestOptions = {
+        method: 'PUT',
+        headers: {
+            'X-CSRFToken': csrftoken,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(json_body),
+        mode: 'same-origin'
+    }
+
+    fetch(`http://127.0.0.1:8000/${username}`, requestOptions)
+    .then(response => response.json()) 
+    .then(data => {
+        console.log(data['message']);
+        if (data['active'] == 'True') {
+            const follow_btn = document.querySelector('#follow-btn');
+            follow_btn.innerHTML = 'Unfollow';
+            follow_btn.dataset.active = 'True';
+        }
+
+        if (data['active'] == 'False') {
+            const follow_btn = document.querySelector('#follow-btn');
+            follow_btn.innerHTML = 'Follow';
+            follow_btn.dataset.active = 'False';
+        }
+    })
+    .catch(error => {
+        console.log('Error:', error);
+    });
 }
