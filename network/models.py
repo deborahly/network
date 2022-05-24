@@ -25,3 +25,11 @@ class Post(models.Model):
 
     def is_valid_post(self):
         return self.content != "" and len(self.content) <= 150
+
+class Follow(models.Model):
+    follower = models.ForeignKey(User, on_delete=models.CASCADE, related_name="follows")
+    followed = models.ForeignKey(User, on_delete=models.CASCADE, related_name="followed_by")
+    active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.active}: {self.follower} follows {self.followed}"
