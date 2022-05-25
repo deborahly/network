@@ -29,6 +29,11 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // When Following page is loaded
+    if (title === 'Following') {
+        loadPosts('following', page_index, ''); 
+    }
+
     // When Profile page is loaded   
     if (title == 'Profile') { 
         username = document.querySelector('#profile-username').dataset.id;
@@ -48,6 +53,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (title === 'Index') {
             loadPosts('all', page_index, '');
         }
+        if (title === 'Following') {
+            loadPosts('following', page_index, '');
+        }
         if (title === 'Profile') {
             loadPosts('profile', page_index, username);
         }
@@ -59,6 +67,9 @@ document.addEventListener('DOMContentLoaded', function() {
         page_index++;
         if (title === 'Index') {
             loadPosts('all', page_index, '');
+        }
+        if (title === 'Following') {
+            loadPosts('following', page_index, '');
         }
         if (title === 'Profile') {
             loadPosts('profile', page_index, username);
@@ -99,17 +110,18 @@ function loadPosts(view, page, username) {
             posts_list.append(card);
         }
         
+        // Display previous/next buttons, when applicable
         if (data.page.has_previous === false && data.page.has_next === false) {
-            document.querySelector('#pagination').innerHTML = '';
+            document.querySelector('.pagination').innerHTML = '';
         }
         
-        if (data.page.has_previous === false) {
+        if (data.page.has_previous === false && data.page.has_next === true) {
             document.querySelector('#previous').setAttribute('disabled', 'true');
         } else {
             document.querySelector('#previous').removeAttribute('disabled');
         }
 
-        if (data.page.has_next === false) {
+        if (data.page.has_previous === true && data.page.has_next === false) {
             document.querySelector('#next').setAttribute('disabled', 'true');
         } else {
             document.querySelector('#next').removeAttribute('disabled');

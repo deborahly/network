@@ -14,6 +14,10 @@ def index(request):
     return render(request, "network/index.html")
 
 
+def following(request):
+    return render(request, "network/following.html")
+
+
 def profile(request, username):
     profile_user = User.objects.get(username=username)
 
@@ -77,6 +81,19 @@ def posts(request):
     # Retrieve posts from database
     if view == "all":
         posts = Post.objects.all().order_by("-created_on")
+    
+    if view == "following":
+        # Get people request user follows
+        list_following = []
+        follows = request.user.follows.filter(active=True)
+        for follow in follows:
+            followed = follow.followed
+            list_following.append(followed)
+        # Get their posts
+        posts = []
+        for following in list_following:
+            following_posts = Post.objects.filter(poster=following)
+            posts.extend(following_posts)
     
     if view == "profile":
         poster = User.objects.get(username=username)
