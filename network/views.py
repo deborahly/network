@@ -11,7 +11,6 @@ from .models import User, Post, Follow
 
 
 def index(request):
-
     return render(request, "network/index.html")
 
 
@@ -49,9 +48,23 @@ def profile(request, username):
                 "message": f"{request.user} is not following {profile_user}.",
                 "active": "False"
             }, status=200)
-
+    
+    following = Follow.objects.filter(follower=profile_user, active=True)
+    followers = Follow.objects.filter(followed=profile_user, active=True)
+    
+    try:
+        f = Follow.objects.get(follower=request.user, followed=profile_user, active='True')
+    except:
+        return render(request, "network/profile.html", {
+            "username": username,
+            "following": following,
+            "followers": followers,
+        })
     return render(request, "network/profile.html", {
-        "profile_user": profile_user
+        "username": username,
+        "following": following,
+        "followers": followers,
+        "f": "True"
     })
 
 
@@ -84,6 +97,7 @@ def posts(request):
     }
 
     return JsonResponse(payload, safe=False)
+
 
 def login_view(request):
     if request.method == "POST":

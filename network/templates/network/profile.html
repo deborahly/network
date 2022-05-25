@@ -4,11 +4,11 @@
 
 {% block body %}
     <section id="profile">
-        <h3 id="profile-username" data-id="{{ profile_user.username }}">{{ profile_user.username }}</h3>
+        <h3 id="profile-username" data-id="{{ username }}">{{ username }}</h3>
         
-        <h5>Followers: {{ profile_user.followers }}</h5>
+        <h5>Following: <span id="following-count">{{ following|length }}</span></h5>
 
-        <h5>Following: {{ profile_user.following }}</h5>
+        <h5>Followers: <span id="followers-count">{{ followers|length }}</span></h5>
 
         <div id="profile-message"></div>
     </section>
@@ -22,7 +22,7 @@
         </div>
 
         <nav aria-label="Page navigation">
-            <ul class="pagination">
+            <ul id='pagination' class="pagination">
                 <li class="page-item"><button id="previous">Previous</button></li>
                 <li class="page-item"><button id="next">Next</button></li>
             </ul>   
@@ -31,10 +31,19 @@
 
     <section id="follow">
         {% if user.is_authenticated %}
-            {% csrf_token %} 
-            <button id="follow-btn" data-active="False">
-                Follow
-            </button>
+            {% csrf_token %}
+                {% if f == "True" %} 
+                    <button id="follow-btn" data-active="True">
+                        Unfollow
+                    </button>
+                {% elif user.username == username %}
+                    <!-- Do not show any button when user seeing their own profile page -->
+                    <button id="follow-btn"></button>
+                {% else %}
+                    <button id="follow-btn" data-active="False">
+                        Follow
+                    </button>
+                {% endif %}
         {% endif %}
     </section>
 {% endblock %}

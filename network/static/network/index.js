@@ -5,13 +5,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Set page title
     var title = document.title;
     
-    // Load page 1 of All Posts by default and only once
+    // Load Index's page 1 by default and only once
     var loadIndexOnce = (function() {
         var executed = false;
         return function() {
             if (!executed) {
                 executed = true;
-                loadPosts('all', page_index, '');
+                loadPosts('all', 1, '');
             }
         };
     })();
@@ -20,27 +20,28 @@ document.addEventListener('DOMContentLoaded', function() {
         loadIndexOnce();
     }
 
-    // Load page 1 of Profile when page is loaded   
-    if (document.title == 'Profile') { 
-        username = document.querySelector('#profile-username').dataset.id;
-        loadPosts('profile', page_index, username);
-
-        // Follow/unfollow when requested
-        document.querySelector('#follow-btn').addEventListener('click', (event) => {
-            active = event.target.dataset.active;
-            follow(username, active);
-        });
-    }
-    
-    // Create post when form is submitted
-    if (document.title === 'Index') {
+    // When Index page is loaded 
+    if (title === 'Index') {
+        // Create post when form is submitted
         document.querySelector('#new-post-form').addEventListener('submit', (event) => {
             event.preventDefault();
             savePost();
         });
     }
 
-    // Request posts when next/previous button is clicked
+    // When Profile page is loaded   
+    if (title == 'Profile') { 
+        username = document.querySelector('#profile-username').dataset.id;
+        loadPosts('profile', page_index, username); 
+        
+        // Follow/unfollow when requested
+        document.querySelector('#follow-btn').addEventListener('click', (event) => {
+            active = event.target.dataset.active;
+            follow(username, active);
+        });
+    }
+
+    // Request posts when previous button is clicked
     document.querySelector('#previous').addEventListener('click', (event) => {
         event.preventDefault();
         page_index--;
@@ -52,6 +53,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     })
 
+    // Request posts when next button is clicked
     document.querySelector('#next').addEventListener('click', (event) => {
         event.preventDefault();
         page_index++;
@@ -95,6 +97,10 @@ function loadPosts(view, page, username) {
             card.append(card_body);
             card_header.append(link);
             posts_list.append(card);
+        }
+        
+        if (data.page.has_previous === false && data.page.has_next === false) {
+            document.querySelector('#pagination').innerHTML = '';
         }
         
         if (data.page.has_previous === false) {
@@ -143,6 +149,8 @@ function savePost() {
     });
 
     document.querySelector('#new-post-content').value = '';
+
+    loadPosts('all', 1, '');
 }
 
 function getCookie(name) {
@@ -186,12 +194,18 @@ function follow(username, active) {
             const follow_btn = document.querySelector('#follow-btn');
             follow_btn.innerHTML = 'Unfollow';
             follow_btn.dataset.active = 'True';
+            let followers_count = parseInt(document.querySelector('#followers-count').innerHTML);
+            followers_count += 1;
+            document.querySelector('#followers-count').innerHTML = followers_count;
         }
 
         if (data['active'] == 'False') {
             const follow_btn = document.querySelector('#follow-btn');
             follow_btn.innerHTML = 'Follow';
             follow_btn.dataset.active = 'False';
+            let followers_count = parseInt(document.querySelector('#followers-count').innerHTML);
+            followers_count -= 1;
+            document.querySelector('#followers-count').innerHTML = followers_count;
         }
     })
     .catch(error => {
