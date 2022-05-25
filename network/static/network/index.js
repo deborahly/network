@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // When Profile page is loaded   
     if (title == 'Profile') { 
-        username = document.querySelector('#profile-username').dataset.id;
+        username = document.querySelector('#profile-username').innerHTML;
         loadPosts('profile', page_index, username); 
         
         // Follow/unfollow when requested
@@ -75,6 +75,13 @@ document.addEventListener('DOMContentLoaded', function() {
             loadPosts('profile', page_index, username);
         }
     })
+
+    // When like/unlike link is clicked, request server a response
+    document.querySelector('.like-link').addEventListener('click', (event) => {
+        event.preventDefault();
+        post_id = event.target.dataset.id;
+        like(post_id);
+    })
 });
 
 function loadPosts(view, page, username) {    
@@ -85,29 +92,43 @@ function loadPosts(view, page, username) {
     .then(response => response.json()) 
     .then(data => {
         for (let i = 0; i < data.posts.length; i++) {
+            // Create elements
             const card = document.createElement('div');
             card.classList.add("card");
-
-            const card_header = document.createElement('div');
-            card_header.classList.add('card-header');
-
+            
             const card_body = document.createElement('div');
             card_body.classList.add('card-body');
+            
+            const card_title = document.createElement('h5');
+            card_title.classList.add('card-title');
+            
+            const profile_link = document.createElement('a');
+            profile_link.setAttribute('href', `/profile/${data.posts[i]['poster']}`);
+            profile_link.innerHTML = data.posts[i]['poster'];
+            
+            const card_subtitle = document.createElement('h7');
+            card_subtitle.classList.add('card-subtitle', 'mb-2', 'text-muted');
+            card_subtitle.innerHTML = `at ${data.posts[i]['created_on']}`;
+            
+            const card_text = document.createElement('p');
+            card_text.classList.add('card-text');
+            card_text.innerHTML = data.posts[i]['content'];
+            
+            const like_link = document.createElement('a');
+            like_link.classList.add('card-link', 'like-link');
+            like_link.setAttribute('href', '#');
+            like_link.dataset.id = data.posts[i]['id'];
+            like_link.innerHTML = 'Like'
 
-            const link = document.createElement('a');
-            link.setAttribute('href', `/${data.posts[i]['poster']}`);
-            link.classList.add('nav-link');
-            link.dataset.id = data.posts[i]['poster'];
-
-            link.innerHTML = data.posts[i]['poster'];
-            card_body.innerHTML = data.posts[i]['content'];
-
-            const posts_list = document.querySelector('#posts-list');            
-
-            card.append(card_header);
+            // Append everything under posts list
+            const posts_list = document.querySelector('#posts-list'); 
+            posts_list.append(card);           
             card.append(card_body);
-            card_header.append(link);
-            posts_list.append(card);
+            card_body.append(card_title);
+            card_body.append(card_subtitle);
+            card_body.append(card_text);
+            card_body.append(like_link);
+            card_title.append(profile_link);
         }
         
         // Display previous/next buttons, when applicable
@@ -189,7 +210,7 @@ function follow(username, active) {
     }
 
     const requestOptions = {
-        method: 'PUT',
+        method: 'POST',
         headers: {
             'X-CSRFToken': csrftoken,
             'Content-Type': 'application/json'
@@ -198,7 +219,7 @@ function follow(username, active) {
         mode: 'same-origin'
     }
 
-    fetch(`http://127.0.0.1:8000/${username}`, requestOptions)
+    fetch(`http://127.0.0.1:8000/profile/${username}`, requestOptions)
     .then(response => response.json()) 
     .then(data => {
         console.log(data['message']);
@@ -218,6 +239,39 @@ function follow(username, active) {
             let followers_count = parseInt(document.querySelector('#followers-count').innerHTML);
             followers_count -= 1;
             document.querySelector('#followers-count').innerHTML = followers_count;
+        }
+    })
+    .catch(error => {
+        console.log('Error:', error);
+    });
+}
+
+function like(post_id) {
+    const csrftoken = getCookie('csrftoken');
+    
+    const json_body = {
+        post_id: post_id
+    }
+
+    const requestOptions = {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrftoken,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(json_body),
+        mode: 'same-origin'
+    }
+
+    fetch(`http://127.0.0.1:8000/${username}`, requestOptions)
+    .then(response => response.json()) 
+    .then(data => {
+        like_link = document.querySelector(`[data-id="${post_id}"]`);
+        if (like_link.innerHTML === 'Like') {
+            like_link.innerHTML = 'Unlike';
+        }
+        if (like_link.innerHTML === 'Unlike') {
+            like_link.innerHTML = 'Like';
         }
     })
     .catch(error => {

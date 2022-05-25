@@ -7,7 +7,7 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.core.paginator import Paginator
 
-from .models import User, Post, Follow
+from .models import User, Post, Follow, Like
 
 
 def index(request):
@@ -21,7 +21,7 @@ def following(request):
 def profile(request, username):
     profile_user = User.objects.get(username=username)
 
-    if request.method == "PUT":
+    if request.method == "POST":
         data = json.loads(request.body)
         active = data.get("active", "")
         # If now following: False -> True
@@ -114,6 +114,39 @@ def posts(request):
     }
 
     return JsonResponse(payload, safe=False)
+
+
+def like(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        post_id = data("post_id", "")
+        # Get posts user liked
+        likes = request.user.likes.all()
+        posts = []
+        for like in likes:
+            post = like.post
+            posts.append(post)
+        # Get current post
+        post = Post.objects.get(post=post_id)
+        # If unlike -> like, add user to liked_by field
+        if post not in posts:
+            # Try to retrieve an already existing Like object
+            try:
+                l = Like.objects.get(post=post_id)
+                l.liked_by.add(request.user)
+                l.save()   
+            # Else create a new Like object for the post
+            except:
+                l = Like.objects.create(post=post_id, liked_by=request.user)
+                l.save()
+                return JsonResponse(status=200)
+            return JsonResponse(status=200)
+        # If like -> unlike, remove user from liked_by field
+        elif post in posts:
+            l = Like.objects.get(post=post_id)
+            l.liked_by.remove(request.user)
+            l.save()
+            return JsonResponse(status=200)
 
 
 def login_view(request):
