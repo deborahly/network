@@ -33,3 +33,10 @@ class Follow(models.Model):
 
     def __str__(self):
         return f"{self.active}: {self.follower} follows {self.followed}"
+
+class Like(models.Model):
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="likes_received")
+    liked_by = models.ManyToManyField(User, related_name="likes")
+
+    def __str__(self):
+        return f"{self.post} liked by {self.liked_by}"

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import User, Post, Follow
+from .models import User, Post, Follow, Like
 
 class UserAdmin(admin.ModelAdmin):
     list_display = ("id", "username", "email", "is_staff", "is_active", "date_joined")
@@ -16,7 +16,13 @@ class FollowAdmin(admin.ModelAdmin):
     list_filter = ("follower", "followed", "active")
     search_fields = ("follower", "followed")
 
+class LikeAdmin(admin.ModelAdmin):
+    list_display = ("post", "liked_by")
+    list_filter = ("liked_by")
+    search_fields = ("post", "liked_by")
+
 # Register your models here.
 admin.site.register(User)
 admin.site.register(Post)
 admin.site.register(Follow)
+admin.site.register(Like)
