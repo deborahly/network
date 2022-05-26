@@ -104,7 +104,7 @@ def posts(request):
     paginator = Paginator(posts, per_page)
     page_object = paginator.get_page(page_number)
 
-    # Add likes
+    # Add likes information
     posts = []
     for post in page_object.object_list:
         if post.likes_received.filter(liked_by=request.user).exists():
@@ -113,6 +113,13 @@ def posts(request):
         else:
             dict = post.serialize2()
             posts.append(dict)
+    
+    # Add poster information
+    for post in posts:
+        if post["poster"] == request.user.username:
+            post.update({"user_is_author": True})
+        else:
+            post.update({"user_is_author": False})
 
     payload = {
         "page": {

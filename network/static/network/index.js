@@ -122,10 +122,16 @@ function loadPosts(view, page, username) {
             like_link.classList.add('card-link', 'like-link');
             like_link.setAttribute('href', '#');
             like_link.dataset.id = data.posts[i]['id'];
-            if (data.posts[i]['liked_by_user'] === true) {
-                like_link.innerHTML = 'Unlike'
+
+            // Adjust like links
+            if (data.posts[i]['user_is_author'] === true) {
+                like_link.style.display = 'none';
             } else {
-                like_link.innerHTML = 'Like'
+                if (data.posts[i]['liked_by_user'] === true) {
+                    like_link.innerHTML = 'Unlike';
+                } else {
+                    like_link.innerHTML = 'Like';
+                }
             }
 
             // Append everything under posts list
