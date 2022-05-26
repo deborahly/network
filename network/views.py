@@ -78,7 +78,7 @@ def posts(request):
     if view == "all":
         posts = Post.objects.all().order_by("-created_on")
     if view == "following":
-        # Get people request user follows
+        # Get the people that request user follows
         list_following = []
         follows = request.user.follows.filter(active=True)
         for follow in follows:
@@ -89,9 +89,15 @@ def posts(request):
         for following in list_following:
             following_posts = Post.objects.filter(poster=following)
             posts.extend(following_posts)
+        # Convert list to queryset
+        list_id = []
+        for post in posts:
+            id = post.id
+            list_id.append(id)
+        posts = Post.objects.filter(pk__in=list_id).order_by("-created_on")      
     if view == "profile":
         poster = User.objects.get(username=username)
-        posts = Post.objects.filter(poster=poster)
+        posts = Post.objects.filter(poster=poster).order_by("-created_on")
     # Add paginator
     per_page = 2
     paginator = Paginator(posts, per_page)
@@ -226,7 +232,9 @@ def save(request):
         if post.is_valid_post() == True:
             post.edited = True
             post.save()
-            return JsonResponse({}, status=200)
+            return JsonResponse({
+                "status": post.edited
+            }, status=200)
         else:
             return JsonResponse({
                 "message": "Content cannot be empty nor contain more than 150 characters."
@@ -237,7 +245,9 @@ def save(request):
         post = Post(poster=poster, content=content)
         if post.is_valid_post() == True:
             post.save()
-            return JsonResponse({}, status=200)
+            return JsonResponse({
+                "status": post.edited
+            }, status=200)
         else:
             return JsonResponse({
                 "message": "Content cannot be empty nor contain more than 150 characters."

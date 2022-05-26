@@ -11,10 +11,10 @@ document.addEventListener('DOMContentLoaded', function() {
         // Create post when form is submitted
         document.querySelector('#new-post-form').addEventListener('submit', (event) => {
             event.preventDefault();
-            const content = document.querySelector('#new-post-content');
+            const content = document.querySelector('#new-post-content').value;
             savePost(content, ''); 
             document.querySelector('#new-post-content').value = '';
-            loadPosts('all', 1, '');
+            // loadPosts('all', 1, '');
         });
     }
 
@@ -192,13 +192,21 @@ function savePost(content, post_id) {
     fetch('http://127.0.0.1:8000/save', requestOptions)
     .then(response => response.json())
     .then(data => {
-        const page_index = document.querySelector('#page-index').dataset.page;
-        
-        if (document.title == 'Index') {
-            loadPosts('all', page_index, '')
-        } else {
-            const username = document.querySelector('#profile-username').innerHTML;
-            loadPosts('profile', page_index, username)
+        if (data.edited === true) {
+            const page_index = document.querySelector('#page-index').dataset.page;
+            if (document.title == 'Index') {
+                loadPosts('all', page_index, '');
+            } else {
+                const username = document.querySelector('#profile-username').innerHTML;
+                loadPosts('profile', page_index, username);
+            }
+        } else {   
+            if (document.title == 'Index') {
+                loadPosts('all', 1, '');
+            } else {
+                const username = document.querySelector('#profile-username').innerHTML;
+                loadPosts('profile', 1, username);
+            }
         }
     })
     .catch(error => {
