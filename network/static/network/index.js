@@ -115,9 +115,14 @@ function loadPosts(view, page, username) {
             card_body.append(card_title);
             card_body.append(card_subtitle);
             card_body.append(card_text);
-            card_body.append(like_link);
 
-            // Display like/unlike link
+            // Display number of likes
+            const likes = document.createElement('span');
+            likes.innerHTML = `Likes ${data.posts[i]['likes']}`;
+            likes.dataset.id = `likes-${data.posts[i]['id']}`;
+            card_body.append(likes);
+
+            // Update like/unlike link
             if (data.posts[i]['user_is_author'] === true) {
                 like_link.style.display = 'none';
             } else {
@@ -127,6 +132,7 @@ function loadPosts(view, page, username) {
                     like_link.innerHTML = 'Like';
                 }
             }
+            card_body.append(like_link);
 
             // Display edit link
             if (data.posts[i]['user_is_author'] === true) {
@@ -142,6 +148,7 @@ function loadPosts(view, page, username) {
                     edit(data.posts[i]['id']);
                 })
             }
+            
             // Add event listener for like link
             like_link.addEventListener('click', (event) => {
                 event.preventDefault();
@@ -298,8 +305,14 @@ function like(post_id) {
 
         if (like_link.innerHTML === 'Like') {
             like_link.innerHTML = 'Unlike';
+            let likes_count = parseInt(document.querySelector(`[data-id="likes-${post_id}"]`).innerHTML);
+            likes_count += 1;
+            document.querySelector(`[data-id="likes-${post_id}"]`).innerHTML = likes_count;
         } else {
             like_link.innerHTML = 'Like';
+            let likes_count = parseInt(document.querySelector(`[data-id="likes-${post_id}"]`).innerHTML);
+            likes_count -= 1;
+            document.querySelector(`[data-id="likes-${post_id}"]`).innerHTML = likes_count;
         }
     })
     .catch(error => {
@@ -334,6 +347,4 @@ function edit(post_id) {
         const content = document.querySelector('#textarea').value;
         savePost(content, post_id);
     })
-
-
 }

@@ -76,7 +76,7 @@ def posts(request):
     username = request.GET.get("username", "")
     # Retrieve posts from database
     if view == "all":
-        posts = Post.objects.all().order_by("-created_on")
+        posts = Post.objects.all()
     if view == "following":
         # Get the people that request user follows
         list_following = []
@@ -97,7 +97,7 @@ def posts(request):
         posts = Post.objects.filter(pk__in=list_id).order_by("-created_on")      
     if view == "profile":
         poster = User.objects.get(username=username)
-        posts = Post.objects.filter(poster=poster).order_by("-created_on")
+        posts = Post.objects.filter(poster=poster)
     # Add paginator
     per_page = 2
     paginator = Paginator(posts, per_page)
@@ -217,7 +217,7 @@ def save(request):
     if request.method != "POST":
         return JsonResponse({
             "message": "POST request required."
-            }, status=400)
+            }, status=400)   
     # Get request data
     data = json.loads(request.body)
     content = data.get("content", "")
@@ -233,7 +233,7 @@ def save(request):
             post.edited = True
             post.save()
             return JsonResponse({
-                "status": post.edited
+                "edited": post.edited
             }, status=200)
         else:
             return JsonResponse({
@@ -241,12 +241,11 @@ def save(request):
             }, status=400)
     # Is post does not exist, create it
     except:
-        # Create post, without saving it yet
         post = Post(poster=poster, content=content)
         if post.is_valid_post() == True:
             post.save()
             return JsonResponse({
-                "status": post.edited
+                "edited": post.edited
             }, status=200)
         else:
             return JsonResponse({

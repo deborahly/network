@@ -11,6 +11,9 @@ class Post(models.Model):
     created_on = models.DateTimeField(auto_now_add=True)
     edited = models.BooleanField(default=False)
     
+    class Meta:
+        ordering = ["-created_on"]
+
     def __str__(self):
         return f"{self.content}"
 
@@ -21,7 +24,7 @@ class Post(models.Model):
             "content": self.content,
             "created_on": self.created_on.strftime("%b %d %Y, %I:%M %p"),
             "edited": self.edited,
-            "likes": self.likes_received.count(),
+            "likes": self.count_likes(),
             "liked_by_user": True
         }
 
@@ -32,9 +35,15 @@ class Post(models.Model):
             "content": self.content,
             "created_on": self.created_on.strftime("%b %d %Y, %I:%M %p"),
             "edited": self.edited,
-            "likes": self.likes_received.count(),
+            # "likes": self.likes_received.count(),
+            "likes": self.count_likes(),
             "liked_by_user": False
         }
+
+    def count_likes(self):
+        liked_by = self.likes_received.values('liked_by').exclude(liked_by=None)
+        count_likes = liked_by.count()
+        return count_likes
 
     def is_valid_post(self):
         return self.content != "" and len(self.content) <= 150
