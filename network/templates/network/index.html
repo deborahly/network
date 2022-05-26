@@ -2,7 +2,9 @@
 
 {% block title %}Index{% endblock %}
 
-{% block body %}
+{% block body %}  
+    <div id="page-index"></div>
+
     <section id="new-post">
         {% if user.is_authenticated %}
             <h3>Create new post</h3>
@@ -15,14 +17,10 @@
                 </div>
                 <button id="new-post-button" type="submit" class="btn btn-primary">Post</button>
             </form>
-
-            <div id="new-post-message"></div>
         {% endif %}
     </section>
 
     <section id="posts">
-        <div id="posts-message"></div>
-        
         <h3>All posts</h3>
 
         <div id="posts-list" class="posts-list">    

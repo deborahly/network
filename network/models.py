@@ -14,15 +14,6 @@ class Post(models.Model):
     def __str__(self):
         return f"{self.content}"
 
-    # def serialize(self):
-    #     return {
-    #         "id": self.id,
-    #         "poster": self.poster.username,
-    #         "content": self.content,
-    #         "created_on": self.created_on.strftime("%b %d %Y, %I:%M %p"),
-    #         "edited": self.edited
-    #     }
-
     def serialize1(self):
         return {
             "id": self.id,

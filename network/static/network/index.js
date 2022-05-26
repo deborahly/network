@@ -3,34 +3,24 @@ document.addEventListener('DOMContentLoaded', function() {
     var page_index = 1;
     
     // Set page title
-    var title = document.title;
+    const title = document.title;
     
-    // Load Index's page 1 by default and only once
-    var loadIndexOnce = (function() {
-        var executed = false;
-        return function() {
-            if (!executed) {
-                executed = true;
-                loadPosts('all', 1, '');
-            }
-        };
-    })();
-    
-    if (title == 'Index') {
-        loadIndexOnce();
-    }
-
     // When Index page is loaded 
     if (title === 'Index') {
+        loadPosts('all', page_index, '');
         // Create post when form is submitted
         document.querySelector('#new-post-form').addEventListener('submit', (event) => {
             event.preventDefault();
-            savePost();
+            const content = document.querySelector('#new-post-content');
+            savePost(content, ''); 
+            document.querySelector('#new-post-content').value = '';
+            loadPosts('all', 1, '');
         });
     }
 
     // When Following page is loaded
     if (title === 'Following') {
+        // loadPosts('following', page_index, ''); 
         loadPosts('following', page_index, ''); 
     }
 
@@ -75,17 +65,6 @@ document.addEventListener('DOMContentLoaded', function() {
             loadPosts('profile', page_index, username);
         }
     })
-
-    // When like/unlike link is clicked, request server a response
-    const links = document.querySelectorAll('.like-link');
-
-    links.forEach(link => {
-        link.addEventListener('click', (event) => {
-            event.preventDefault();
-            console.log('ok');
-            like(post_id);
-        })
-    })
 });
 
 function loadPosts(view, page, username) {    
@@ -96,12 +75,17 @@ function loadPosts(view, page, username) {
     .then(response => response.json()) 
     .then(data => {
         for (let i = 0; i < data.posts.length; i++) {
-            // Create elements
+            // Update page index
+            const page_index = document.querySelector('#page-index');
+            page_index.dataset.page = data.page['current'];
+            
+            // Create card elements
             const card = document.createElement('div');
             card.classList.add("card");
             
             const card_body = document.createElement('div');
             card_body.classList.add('card-body');
+            card_body.dataset.id = `body-${data.posts[i]['id']}`;
             
             const card_title = document.createElement('h5');
             card_title.classList.add('card-title');
@@ -116,14 +100,24 @@ function loadPosts(view, page, username) {
             
             const card_text = document.createElement('p');
             card_text.classList.add('card-text');
+            card_text.dataset.id = `text-${data.posts[i]['id']}`;
             card_text.innerHTML = data.posts[i]['content'];
             
             const like_link = document.createElement('a');
-            like_link.classList.add('card-link', 'like-link');
+            like_link.classList.add('like-link');
             like_link.setAttribute('href', '#');
-            like_link.dataset.id = data.posts[i]['id'];
+            like_link.dataset.id = `like-${data.posts[i]['id']}`;
 
-            // Adjust like links
+            const posts_list = document.querySelector('#posts-list'); 
+            posts_list.append(card);           
+            card.append(card_body);
+            card_title.append(profile_link);
+            card_body.append(card_title);
+            card_body.append(card_subtitle);
+            card_body.append(card_text);
+            card_body.append(like_link);
+
+            // Display like/unlike link
             if (data.posts[i]['user_is_author'] === true) {
                 like_link.style.display = 'none';
             } else {
@@ -134,17 +128,21 @@ function loadPosts(view, page, username) {
                 }
             }
 
-            // Append everything under posts list
-            const posts_list = document.querySelector('#posts-list'); 
-            posts_list.append(card);           
-            card.append(card_body);
-            card_body.append(card_title);
-            card_body.append(card_subtitle);
-            card_body.append(card_text);
-            card_body.append(like_link);
-            card_title.append(profile_link);
-
-            // Add event listener
+            // Display edit link
+            if (data.posts[i]['user_is_author'] === true) {
+                const edit_link = document.createElement('a');
+                edit_link.classList.add('edit-link');
+                edit_link.setAttribute('href', '#');
+                edit_link.dataset.id = `edit-${data.posts[i]['id']}`;
+                edit_link.innerHTML = 'Edit';
+                card_body.append(edit_link);
+                // Add event listener for edit link
+                edit_link.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    edit(data.posts[i]['id']);
+                })
+            }
+            // Add event listener for like link
             like_link.addEventListener('click', (event) => {
                 event.preventDefault();
                 like(data.posts[i]['id']);
@@ -173,13 +171,12 @@ function loadPosts(view, page, username) {
     });
 }
 
-function savePost() {
+function savePost(content, post_id) {
     const csrftoken = getCookie('csrftoken');
     
-    const content = document.querySelector('#new-post-content').value;
-    
     const json_body = {
-        content: content
+        content: content,
+        post_id: post_id
     }
     
     const requestOptions = {
@@ -192,18 +189,21 @@ function savePost() {
         mode: 'same-origin'
     }
 
-    fetch('http://127.0.0.1:8000/new', requestOptions)
+    fetch('http://127.0.0.1:8000/save', requestOptions)
     .then(response => response.json())
     .then(data => {
-        document.querySelector('#new-post-message').innerHTML = data['message'];
+        const page_index = document.querySelector('#page-index').dataset.page;
+        
+        if (document.title == 'Index') {
+            loadPosts('all', page_index, '')
+        } else {
+            const username = document.querySelector('#profile-username').innerHTML;
+            loadPosts('profile', page_index, username)
+        }
     })
     .catch(error => {
         console.log('Error:', error);
     });
-
-    document.querySelector('#new-post-content').value = '';
-
-    loadPosts('all', 1, '');
 }
 
 function getCookie(name) {
@@ -286,7 +286,7 @@ function like(post_id) {
     fetch('http://127.0.0.1:8000/like', requestOptions)
     .then(response => response.json()) 
     .then(_ => {
-        like_link = document.querySelector(`[data-id="${post_id}"]`);
+        like_link = document.querySelector(`[data-id="like-${post_id}"]`);
 
         if (like_link.innerHTML === 'Like') {
             like_link.innerHTML = 'Unlike';
@@ -297,4 +297,35 @@ function like(post_id) {
     .catch(error => {
         console.log('Error:', error);
     });
+}
+
+function edit(post_id) {
+    const card_text = document.querySelector(`[data-id="text-${post_id}"]`);
+
+    const textarea = document.createElement('textarea');
+    textarea.id = 'textarea'
+    textarea.innerHTML = card_text.innerHTML; 
+
+    card_text.innerHTML = '';
+    card_text.append(textarea);
+
+    const edit_link = document.querySelector(`[data-id="edit-${post_id}"]`);
+    edit_link.remove();
+
+    const card_body = document.querySelector(`[data-id="body-${post_id}"]`);
+
+    const save_link = document.createElement('a');
+    save_link.classList.add('save-link');
+    save_link.setAttribute('href', '#');
+    save_link.innerHTML = 'Save';
+    card_body.append(save_link);
+
+    // Add event listener for save link
+    save_link.addEventListener('click', (event) => {
+        event.preventDefault();
+        const content = document.querySelector('#textarea').value;
+        savePost(content, post_id);
+    })
+
+
 }

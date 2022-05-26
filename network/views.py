@@ -20,7 +20,6 @@ def following(request):
 
 def profile(request, username):
     profile_user = User.objects.get(username=username)
-
     if request.method == "POST":
         data = json.loads(request.body)
         active = data.get("active", "")
@@ -52,10 +51,8 @@ def profile(request, username):
                 "message": f"{request.user} is not following {profile_user}.",
                 "active": "False"
             }, status=200)
-    
     following = Follow.objects.filter(follower=profile_user, active=True)
-    followers = Follow.objects.filter(followed=profile_user, active=True)
-    
+    followers = Follow.objects.filter(followed=profile_user, active=True)  
     try:
         f = Follow.objects.get(follower=request.user, followed=profile_user, active='True')
     except:
@@ -77,11 +74,9 @@ def posts(request):
     page_number = request.GET.get("page", "")
     view = request.GET.get("view", "")
     username = request.GET.get("username", "")
-    
     # Retrieve posts from database
     if view == "all":
         posts = Post.objects.all().order_by("-created_on")
-    
     if view == "following":
         # Get people request user follows
         list_following = []
@@ -94,16 +89,13 @@ def posts(request):
         for following in list_following:
             following_posts = Post.objects.filter(poster=following)
             posts.extend(following_posts)
-    
     if view == "profile":
         poster = User.objects.get(username=username)
         posts = Post.objects.filter(poster=poster)
-    
     # Add paginator
     per_page = 2
     paginator = Paginator(posts, per_page)
     page_object = paginator.get_page(page_number)
-
     # Add likes information
     posts = []
     for post in page_object.object_list:
@@ -113,14 +105,12 @@ def posts(request):
         else:
             dict = post.serialize2()
             posts.append(dict)
-    
     # Add poster information
     for post in posts:
         if post["poster"] == request.user.username:
             post.update({"user_is_author": True})
         else:
             post.update({"user_is_author": False})
-
     payload = {
         "page": {
             "current": page_object.number,
@@ -128,9 +118,7 @@ def posts(request):
             "has_previous": page_object.has_previous()
         },
         "posts": posts
-        # "posts": [post.serialize() for post in page_object.object_list]
     }
-
     return JsonResponse(payload, safe=False)
 
 
@@ -164,33 +152,6 @@ def like(request):
                 l.save()
                 return JsonResponse({}, status=200)
             return JsonResponse({}, status=200)        
-
-
-        # likes = request.user.likes.all()
-        # posts = []
-        # for like in likes:
-        #     post = like.post
-        #     posts.append(post)
-
-        # # If unlike -> like, add user to liked_by field
-        # if post not in posts:
-        #     # Try to retrieve an already existing Like object
-        #     try:
-        #         l = Like.objects.get(post=post_id)
-        #         l.liked_by.add(request.user)
-        #         l.save()   
-        #     # Else create a new Like object for the post
-        #     except:
-        #         l = Like.objects.create(post=post_id, liked_by=request.user)
-        #         l.save()
-        #         return JsonResponse(status=200)
-        #     return JsonResponse(status=200)
-        # # If like -> unlike, remove user from liked_by field
-        # elif post in posts:
-        #     l = Like.objects.get(post=post_id)
-        #     l.liked_by.remove(request.user)
-        #     l.save()
-        #     return JsonResponse(status=200)
 
 
 def login_view(request):
@@ -245,27 +206,39 @@ def register(request):
         return render(request, "network/register.html")
 
 
-def new(request):
+def save(request):
     # If method is not POST, return error message and status 400 (Bad Request)
     if request.method != "POST":
-        return JsonResponse({"message": "POST request required."}, status=400)
-
-    # Get content
+        return JsonResponse({
+            "message": "POST request required."
+            }, status=400)
+    # Get request data
     data = json.loads(request.body)
     content = data.get("content", "")
+    post_id = data.get("post_id", "")
     # Get poster
     poster = User.objects.get(username=request.user)
-    # Create post, without saving it yet
-    post = Post(poster=poster, content=content)
-    # Check if it is valid
-    if post.is_valid_post() == True:
-        # Attempt to create post
-        try:
+    # If post exists (post is being edited), update it
+    try:
+        post = Post.objects.get(id=post_id)
+        post.content = content
+        # Check if content is valid
+        if post.is_valid_post() == True:
+            post.edited = True
             post.save()
-        # If creation unsuccessful, return error message and status 500 (Internal Server Error)
-        except IntegrityError:
-            return JsonResponse({"message": "Post could not be saved."}, status=500)
-        # If creation successful, return success message and status 201 (Created)
-        return JsonResponse({"message": "Post created successfully."}, status=201)
-
-    return JsonResponse({"message": "Content cannot be empty nor contain more than 150 characters."}, status=400)
+            return JsonResponse({}, status=200)
+        else:
+            return JsonResponse({
+                "message": "Content cannot be empty nor contain more than 150 characters."
+            }, status=400)
+    # Is post does not exist, create it
+    except:
+        # Create post, without saving it yet
+        post = Post(poster=poster, content=content)
+        if post.is_valid_post() == True:
+            post.save()
+            return JsonResponse({}, status=200)
+        else:
+            return JsonResponse({
+                "message": "Content cannot be empty nor contain more than 150 characters."
+            }, status=400)
