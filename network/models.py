@@ -14,13 +14,35 @@ class Post(models.Model):
     def __str__(self):
         return f"{self.content}"
 
-    def serialize(self):
+    # def serialize(self):
+    #     return {
+    #         "id": self.id,
+    #         "poster": self.poster.username,
+    #         "content": self.content,
+    #         "created_on": self.created_on.strftime("%b %d %Y, %I:%M %p"),
+    #         "edited": self.edited
+    #     }
+
+    def serialize1(self):
         return {
             "id": self.id,
             "poster": self.poster.username,
             "content": self.content,
             "created_on": self.created_on.strftime("%b %d %Y, %I:%M %p"),
-            "edited": self.edited
+            "edited": self.edited,
+            "likes": self.likes_received.count(),
+            "liked_by_user": True
+        }
+
+    def serialize2(self):
+        return {
+            "id": self.id,
+            "poster": self.poster.username,
+            "content": self.content,
+            "created_on": self.created_on.strftime("%b %d %Y, %I:%M %p"),
+            "edited": self.edited,
+            "likes": self.likes_received.count(),
+            "liked_by_user": False
         }
 
     def is_valid_post(self):
@@ -39,4 +61,4 @@ class Like(models.Model):
     liked_by = models.ManyToManyField(User, related_name="likes")
 
     def __str__(self):
-        return f"{self.post} liked by {self.liked_by}"
+        return f"{self.post} liked by {self.liked_by.all()}"

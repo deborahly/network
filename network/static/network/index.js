@@ -77,10 +77,14 @@ document.addEventListener('DOMContentLoaded', function() {
     })
 
     // When like/unlike link is clicked, request server a response
-    document.querySelector('.like-link').addEventListener('click', (event) => {
-        event.preventDefault();
-        post_id = event.target.dataset.id;
-        like(post_id);
+    const links = document.querySelectorAll('.like-link');
+
+    links.forEach(link => {
+        link.addEventListener('click', (event) => {
+            event.preventDefault();
+            console.log('ok');
+            like(post_id);
+        })
     })
 });
 
@@ -118,7 +122,11 @@ function loadPosts(view, page, username) {
             like_link.classList.add('card-link', 'like-link');
             like_link.setAttribute('href', '#');
             like_link.dataset.id = data.posts[i]['id'];
-            like_link.innerHTML = 'Like'
+            if (data.posts[i]['liked_by_user'] === true) {
+                like_link.innerHTML = 'Unlike'
+            } else {
+                like_link.innerHTML = 'Like'
+            }
 
             // Append everything under posts list
             const posts_list = document.querySelector('#posts-list'); 
@@ -129,6 +137,12 @@ function loadPosts(view, page, username) {
             card_body.append(card_text);
             card_body.append(like_link);
             card_title.append(profile_link);
+
+            // Add event listener
+            like_link.addEventListener('click', (event) => {
+                event.preventDefault();
+                like(data.posts[i]['id']);
+            })
         }
         
         // Display previous/next buttons, when applicable
@@ -263,14 +277,14 @@ function like(post_id) {
         mode: 'same-origin'
     }
 
-    fetch(`http://127.0.0.1:8000/${username}`, requestOptions)
+    fetch('http://127.0.0.1:8000/like', requestOptions)
     .then(response => response.json()) 
-    .then(data => {
+    .then(_ => {
         like_link = document.querySelector(`[data-id="${post_id}"]`);
+
         if (like_link.innerHTML === 'Like') {
             like_link.innerHTML = 'Unlike';
-        }
-        if (like_link.innerHTML === 'Unlike') {
+        } else {
             like_link.innerHTML = 'Like';
         }
     })
