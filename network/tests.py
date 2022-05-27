@@ -1,6 +1,10 @@
+import os
+import pathlib
+import unittest
 from django.test import TestCase
 from .models import User, Post
 
+from selenium import webdriver
 
 # Create your tests here.
 
@@ -14,6 +18,9 @@ class NewTestCase(TestCase):
         good_post = Post.objects.create(poster=user, content="My name is Bridgette, but you can call me Gigi.")
         empty_post = Post.objects.create(poster=user, content="")
         too_long_post = Post.objects.create(poster=user, content="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+
+        # Sets up web driver using Google chrome
+        driver = webdriver.Chrome()
 
     def test_good_post(self):
         user = User.objects.get(username="Gigi")
@@ -29,4 +36,3 @@ class NewTestCase(TestCase):
         user = User.objects.get(username="Gigi")
         p = Post.objects.get(content="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         self.assertFalse(p.is_valid_post())
-        
