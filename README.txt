@@ -44,10 +44,9 @@
 (+) active: True by default, when a following is created
 
 (8) Create models.Like
-(+) Fields: post, liked_by, active
+(+) Fields: post, liked_by
 (+) post: many-to-one relationship with models.Post id
-(+) liked_by: many-to-one relationship with models.User id
-(+) active: True by default, when a like is created
+(+) liked_by: many-to-many relationship with models.User id
 
 ---
 URLs

@@ -9,13 +9,22 @@ document.addEventListener('DOMContentLoaded', function() {
     if (title === 'Index') {
         loadPosts('all', page_index, '');
         // Create post when form is submitted
-        document.querySelector('#new-post-form').addEventListener('submit', (event) => {
-            event.preventDefault();
-            const content = document.querySelector('#new-post-content').value;
-            savePost(content, ''); 
-            document.querySelector('#new-post-content').value = '';
-            // loadPosts('all', 1, '');
-        });
+        if (document.querySelector('#new-post-form')) {
+            document.querySelector('#new-post-form').addEventListener('submit', (event) => {
+                event.preventDefault();
+                const content = document.querySelector('#new-post-content').value;
+                savePost(content, ''); 
+                document.querySelector('#new-post-content').value = '';
+            });
+        }
+
+        // document.querySelector('#new-post-form').addEventListener('submit', (event) => {
+        //     event.preventDefault();
+        //     const content = document.querySelector('#new-post-content').value;
+        //     savePost(content, ''); 
+        //     document.querySelector('#new-post-content').value = '';
+        //     // loadPosts('all', 1, '');
+        // });
     }
 
     // When Following page is loaded
@@ -102,11 +111,6 @@ function loadPosts(view, page, username) {
             card_text.classList.add('card-text');
             card_text.dataset.id = `text-${data.posts[i]['id']}`;
             card_text.innerHTML = data.posts[i]['content'];
-            
-            const like_link = document.createElement('a');
-            like_link.classList.add('like-link');
-            like_link.setAttribute('href', '#');
-            like_link.dataset.id = `like-${data.posts[i]['id']}`;
 
             const posts_list = document.querySelector('#posts-list'); 
             posts_list.append(card);           
@@ -117,22 +121,41 @@ function loadPosts(view, page, username) {
             card_body.append(card_text);
 
             // Display number of likes
+            const likes_indication = document.createElement('span');
+            likes_indication.innerHTML = 'Likes'
             const likes = document.createElement('span');
-            likes.innerHTML = `Likes ${data.posts[i]['likes']}`;
+            likes.innerHTML = `${data.posts[i]['likes']}`;
             likes.dataset.id = `likes-${data.posts[i]['id']}`;
-            card_body.append(likes);
+            card_body.append(likes_indication);
+            likes_indication.append(likes);
 
-            // Update like/unlike link
-            if (data.posts[i]['user_is_author'] === true) {
-                like_link.style.display = 'none';
-            } else {
-                if (data.posts[i]['liked_by_user'] === true) {
-                    like_link.innerHTML = 'Unlike';
+            // If user is logged in and is not the post's author, add like link
+            if (data.posts[i]['user_is_author'] != null) {
+                const like_link = document.createElement('a');
+                like_link.classList.add('like-link');
+                like_link.setAttribute('href', '#');
+                like_link.dataset.id = `like-${data.posts[i]['id']}`;
+                
+                // Update like/unlike link
+                if (data.posts[i]['user_is_author'] === true) {
+                    like_link.style.display = 'none';
                 } else {
-                    like_link.innerHTML = 'Like';
+                    if (data.posts[i]['liked_by_user'] === true) {
+                        like_link.innerHTML = 'Unlike';
+                    } else {
+                        like_link.innerHTML = 'Like';
+                    }
                 }
+
+                // Append link
+                card_body.append(like_link);
+        
+                // Add event listener for like link
+                like_link.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    like(data.posts[i]['id']);
+                })
             }
-            card_body.append(like_link);
 
             // Display edit link
             if (data.posts[i]['user_is_author'] === true) {
@@ -148,12 +171,6 @@ function loadPosts(view, page, username) {
                     edit(data.posts[i]['id']);
                 })
             }
-            
-            // Add event listener for like link
-            like_link.addEventListener('click', (event) => {
-                event.preventDefault();
-                like(data.posts[i]['id']);
-            })
         }
         
         // Display previous/next buttons, when applicable
@@ -300,19 +317,18 @@ function like(post_id) {
 
     fetch('http://127.0.0.1:8000/like', requestOptions)
     .then(response => response.json()) 
-    .then(_ => {
-        like_link = document.querySelector(`[data-id="like-${post_id}"]`);
+    .then(data => {
+        var likes_count = parseInt(document.querySelector(`[data-id="likes-${post_id}"]`).innerHTML);
+        var like_link = document.querySelector(`[data-id="like-${post_id}"]`);
 
-        if (like_link.innerHTML === 'Like') {
-            like_link.innerHTML = 'Unlike';
-            let likes_count = parseInt(document.querySelector(`[data-id="likes-${post_id}"]`).innerHTML);
+        if (data.like_status === 'liked') {
             likes_count += 1;
             document.querySelector(`[data-id="likes-${post_id}"]`).innerHTML = likes_count;
-        } else {
-            like_link.innerHTML = 'Like';
-            let likes_count = parseInt(document.querySelector(`[data-id="likes-${post_id}"]`).innerHTML);
+            like_link.innerHTML = 'Unlike';
+        } else if (data.like_status === 'unliked') {
             likes_count -= 1;
             document.querySelector(`[data-id="likes-${post_id}"]`).innerHTML = likes_count;
+            like_link.innerHTML = 'Like';
         }
     })
     .catch(error => {

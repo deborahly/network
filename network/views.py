@@ -1,6 +1,7 @@
 import json
 from multiprocessing.spawn import is_forking
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
@@ -14,6 +15,7 @@ def index(request):
     return render(request, "network/index.html")
 
 
+@login_required
 def following(request):
     return render(request, "network/following.html")
 
@@ -77,7 +79,7 @@ def posts(request):
     # Retrieve posts from database
     if view == "all":
         posts = Post.objects.all()
-    if view == "following":
+    elif view == "following":
         # Get the people that request user follows
         list_following = []
         follows = request.user.follows.filter(active=True)
@@ -95,39 +97,54 @@ def posts(request):
             id = post.id
             list_id.append(id)
         posts = Post.objects.filter(pk__in=list_id).order_by("-created_on")      
-    if view == "profile":
+    elif view == "profile":
         poster = User.objects.get(username=username)
         posts = Post.objects.filter(poster=poster)
     # Add paginator
     per_page = 2
     paginator = Paginator(posts, per_page)
     page_object = paginator.get_page(page_number)
-    # Add likes information
-    posts = []
+    # Serialize objects
+    posts_on_page = []
     for post in page_object.object_list:
-        if post.likes_received.filter(liked_by=request.user).exists():
-            dict = post.serialize1()
-            posts.append(dict)
-        else:
-            dict = post.serialize2()
-            posts.append(dict)
-    # Add poster information
-    for post in posts:
-        if post["poster"] == request.user.username:
-            post.update({"user_is_author": True})
-        else:
-            post.update({"user_is_author": False})
+        dict = post.serialize()
+        posts_on_page.append(dict)
+    if request.user.is_authenticated:
+        # Add number of likes and whether request user like post
+        # for post in page_object.object_list:
+        #     if post.likes_received.filter(liked_by=request.user).exists():
+        #         post.update({"user_is_author": True})
+        #     else:
+        #         post.update({"user_is_author": False})
+            #     dict = post.serialize1()
+            #     posts.append(dict)
+            # else:
+            #     dict = post.serialize2()
+            #     posts.append(dict)
+        for i in range(len(page_object.object_list)):
+            if page_object.object_list[i].likes_received.filter(liked_by=request.user).exists():
+                posts_on_page[i].update({"liked_by_user": True})
+            else:
+                posts_on_page[i].update({"liked_by_user": False})
+        # Add whether request user is author of the post
+        for post in posts_on_page:
+            if post["poster"] == request.user.username:
+                post.update({"user_is_author": True})
+            else:
+                post.update({"user_is_author": False}) 
+
     payload = {
         "page": {
             "current": page_object.number,
             "has_next": page_object.has_next(),
             "has_previous": page_object.has_previous()
         },
-        "posts": posts
+        "posts": posts_on_page
     }
     return JsonResponse(payload, safe=False)
 
 
+@login_required
 def like(request):
     if request.method == 'POST':
         data = json.loads(request.body)
@@ -143,7 +160,9 @@ def like(request):
             # In case user likes post, unlike it
             l.liked_by.remove(request.user)
             l.save()
-            return JsonResponse({}, status=200)
+            return JsonResponse({
+                "like_status": "unliked"
+            }, status=200)
         # If not, retrieve Like object and add user or create Like object with user 
         except Like.DoesNotExist:
             # Try to retrieve Like object and add user
@@ -156,8 +175,12 @@ def like(request):
                 l = Like.objects.create(post=post)
                 l.liked_by.add(request.user)
                 l.save()
-                return JsonResponse({}, status=200)
-            return JsonResponse({}, status=200)        
+                return JsonResponse({
+                    "like_status": "liked"
+                }, status=200)
+            return JsonResponse({
+                "like_status": "liked"
+            }, status=200)        
 
 
 def login_view(request):
@@ -180,6 +203,7 @@ def login_view(request):
         return render(request, "network/login.html")
 
 
+@login_required
 def logout_view(request):
     logout(request)
     return HttpResponseRedirect(reverse("index"))
@@ -212,6 +236,7 @@ def register(request):
         return render(request, "network/register.html")
 
 
+@login_required
 def save(request):
     # If method is not POST, return error message and status 400 (Bad Request)
     if request.method != "POST":

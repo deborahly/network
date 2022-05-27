@@ -17,28 +17,37 @@ class Post(models.Model):
     def __str__(self):
         return f"{self.content}"
 
-    def serialize1(self):
+    def serialize(self):
         return {
             "id": self.id,
             "poster": self.poster.username,
             "content": self.content,
             "created_on": self.created_on.strftime("%b %d %Y, %I:%M %p"),
             "edited": self.edited,
-            "likes": self.count_likes(),
-            "liked_by_user": True
+            "likes": self.count_likes()
         }
 
-    def serialize2(self):
-        return {
-            "id": self.id,
-            "poster": self.poster.username,
-            "content": self.content,
-            "created_on": self.created_on.strftime("%b %d %Y, %I:%M %p"),
-            "edited": self.edited,
-            # "likes": self.likes_received.count(),
-            "likes": self.count_likes(),
-            "liked_by_user": False
-        }
+    # def serialize1(self):
+    #     return {
+    #         "id": self.id,
+    #         "poster": self.poster.username,
+    #         "content": self.content,
+    #         "created_on": self.created_on.strftime("%b %d %Y, %I:%M %p"),
+    #         "edited": self.edited,
+    #         "likes": self.count_likes(),
+    #         "liked_by_user": True
+    #     }
+
+    # def serialize2(self):
+    #     return {
+    #         "id": self.id,
+    #         "poster": self.poster.username,
+    #         "content": self.content,
+    #         "created_on": self.created_on.strftime("%b %d %Y, %I:%M %p"),
+    #         "edited": self.edited,
+    #         "likes": self.count_likes(),
+    #         "liked_by_user": False
+    #     }
 
     def count_likes(self):
         liked_by = self.likes_received.values('liked_by').exclude(liked_by=None)
