@@ -23,6 +23,9 @@ class IntegrationTestCase(LiveServerTestCase):
         return WebDriverWait(webdriver, wait_time).until(EC.presence_of_element_located((method, query)))
     
     selenium = None
+    selenium_authenticated = None
+    LOGIN_USER = "deborahly"
+    USER_PASSWORD = "12345"
 
     def create_driver(self):
         # Setup chrome options
@@ -36,11 +39,25 @@ class IntegrationTestCase(LiveServerTestCase):
         # Choose Chrome Browser
         return webdriver.Chrome(service=webdriver_service, options=chrome_options)
 
+    def login(self, webdriver):
+        webdriver.get("http://127.0.0.1:8000/")
+        login_link = self.wait_for_element(webdriver, By.XPATH, '//a[@href="/login"]')
+        login_link.click()
+
+        username = self.wait_for_element(webdriver, By.XPATH, '//*[@name="username"]')
+        username.send_keys(self.LOGIN_USER)
+        password = self.wait_for_element(webdriver, By.XPATH, '//*[@name="password"]')
+        password.send_keys(self.USER_PASSWORD)
+
+        login_button = self.wait_for_element(webdriver, By.XPATH, '//input[@value="Login"]')
+        login_button.click()
+
     def setUp(self) -> None:
         # Choose Chrome Browser
         self.selenium = self.create_driver()
-    
+
     def test_index_page_should_exist(self):
+        # self.selenium = self.create_driver()
         self.selenium.get("http://127.0.0.1:8000/")
         
         # Check result
@@ -102,11 +119,11 @@ class IntegrationTestCase(LiveServerTestCase):
         # Check result
         self.assertEqual(disabled, expected)
     
-    def test_index_page_1_next_previous_buttons_work(self):
+    def test_index_page_1_next_previous_buttons_should_work(self):
         self.selenium.get('http://127.0.0.1:8000/')
         self.wait_for_element(self.selenium, By.XPATH, '//*[@id="next"]')
 
-        # Extract elements from page
+        # Extract next page button from page 1
         next_page = self.selenium.find_element(by=By.XPATH, value='//*[@id="next"]')
         
         # Action
@@ -115,12 +132,27 @@ class IntegrationTestCase(LiveServerTestCase):
 
         # Expected result for next button
         data_page2 = index_page.get_attribute("data-page")
-        expected2 = "2"
+        expected = "2"
 
-        # # Check result for next button
-        self.assertEqual(data_page2, expected2)
+        # Check result for next button
+        self.assertEqual(data_page2, expected)
 
-        # Extract elements from page
+        # Extract cards from page 2
+        cards = self.selenium.find_elements_by_class_name('card-body')
+        card_titles = self.selenium.find_elements_by_class_name('card-title')
+        card_subtitles = self.selenium.find_elements_by_class_name('card-subtitle')
+        card_texts = self.selenium.find_elements_by_class_name('card-text')
+
+        # Expected result for posts on page 2
+        expected = 2
+
+        # Check results
+        self.assertEqual(len(cards), expected)
+        self.assertEqual(len(card_titles), expected)
+        self.assertEqual(len(card_subtitles), expected)
+        self.assertEqual(len(card_texts), expected)
+
+        # Extract previous buttons from page 2
         previous_page = self.selenium.find_element(by=By.XPATH, value='//*[@id="previous"]')
         
         # Action
@@ -129,33 +161,10 @@ class IntegrationTestCase(LiveServerTestCase):
 
         # Expected result for previous button
         data_page1 = index_page.get_attribute("data-page")
-        expected1 = "1"
+        expected = "1"
 
         # Check result for previous 
-        self.assertEqual(data_page1, expected1)
-
-    def test_index_page_2_posts_should_load(self):
-        self.selenium.get('http://127.0.0.1:8000/')
-        next_page = self.wait_for_element(self.selenium, By.XPATH, '//*[@id="next"]')
-
-        # Action
-        next_page.click()
-        self.wait_for_element(self.selenium, By.CLASS_NAME, 'card-text')
-
-        # Extract elements from page
-        cards = self.selenium.find_elements_by_class_name('card-body')
-        card_titles = self.selenium.find_elements_by_class_name('card-title')
-        card_subtitles = self.selenium.find_elements_by_class_name('card-subtitle')
-        card_texts = self.selenium.find_elements_by_class_name('card-text')
-
-        # Expected result
-        expected = 2
-
-        # Check results
-        self.assertEqual(len(cards), expected)
-        self.assertEqual(len(card_titles), expected)
-        self.assertEqual(len(card_subtitles), expected)
-        self.assertEqual(len(card_texts), expected)
+        self.assertEqual(data_page1, expected)
 
     def test_index_page_1_profile_should_load(self):
         self.selenium.get('http://127.0.0.1:8000/')
@@ -170,14 +179,186 @@ class IntegrationTestCase(LiveServerTestCase):
         # Check result
         self.assertEqual(self.selenium.title, "Profile")
 
+    def test_user_authenticated(self):
+        self.selenium_authenticated = self.create_driver()
+        self.login(self.selenium_authenticated)
+        self.selenium_authenticated.get("http://127.0.0.1:8000/")
+
+        profile_link = self.wait_for_element(self.selenium_authenticated, By.XPATH, f'//a[@href="/profile/{self.LOGIN_USER}" and @class="nav-link"]')
+
+        # Check result
+        self.assertEqual(profile_link.text, self.LOGIN_USER)  
+
+    def test_authenticated_index_page_should_exist(self):
+        self.selenium_authenticated = self.create_driver()
+        self.login(self.selenium_authenticated)
+        self.selenium_authenticated.get("http://127.0.0.1:8000/")
+        
+        # Check result
+        self.assertEqual(self.selenium_authenticated.title, "Index")
+
+    def test_authenticated_index_page_1_posts_should_load(self):
+        self.selenium_authenticated = self.create_driver()
+        self.login(self.selenium_authenticated)
+        self.selenium_authenticated.get("http://127.0.0.1:8000/")
+        
+        self.wait_for_element(self.selenium_authenticated, By.CLASS_NAME, "card-text")
+
+        # Extract elements from page
+        cards = self.selenium_authenticated.find_elements_by_class_name("card-body")
+        card_titles = self.selenium_authenticated.find_elements_by_class_name("card-title")
+        card_subtitles = self.selenium_authenticated.find_elements_by_class_name("card-subtitle")
+        card_texts = self.selenium_authenticated.find_elements_by_class_name("card-text")
+
+        # Expected result
+        expected = 2
+
+        # Check results
+        self.assertEqual(len(cards), expected)
+        self.assertEqual(len(card_titles), expected)
+        self.assertEqual(len(card_subtitles), expected)
+        self.assertEqual(len(card_texts), expected)
+
+    def test_authenticated_index_page_1_likes_should_appear(self):
+        self.selenium_authenticated = self.create_driver()
+        self.login(self.selenium_authenticated)
+        self.selenium_authenticated.get("http://127.0.0.1:8000/")
+
+        self.wait_for_element(self.selenium_authenticated, By.XPATH, '//*[@id="posts-list"]/div[2]/div/span/span')
+        
+        # Sets for loop to start at 1
+        def nums(first_number, last_number, step = 1):
+            return range(first_number, last_number + 1, step)
+
+        # Extract elements from page
+        likes_numbers = []
+
+        for i in nums(1,2):
+            likes_number = self.selenium_authenticated.find_element(by=By.XPATH, value=f'//*[@id="posts-list"]/div[{i}]/div/span/span').text
+            likes_numbers.append(likes_number)
+
+        # Expected result
+        expected = ["0", "1"]
+        
+        # Check results
+        for i in range(1):
+            assert likes_numbers[i] == expected[i]
+
+    def test_authenticated_index_page_1_previous_button_should_be_disabled(self):
+        self.selenium_authenticated = self.create_driver()
+        self.login(self.selenium_authenticated)
+        self.selenium_authenticated.get("http://127.0.0.1:8000/")
+
+        self.wait_for_element(self.selenium_authenticated, By.XPATH, '//*[@id="previous"]')
+
+        # Extract elements from page
+        previous_page = self.selenium_authenticated.find_element(by=By.XPATH, value='//*[@id="previous"]')
+        disabled = previous_page.get_attribute("disabled")
+
+        # Expected result
+        expected = "true"
+
+        # Check result
+        self.assertEqual(disabled, expected)
+    
+    def test_authenticated_index_page_1_next_previous_buttons_should_work(self):
+        self.selenium_authenticated = self.create_driver()
+        self.login(self.selenium_authenticated)
+        self.selenium_authenticated.get("http://127.0.0.1:8000/")
+
+        self.wait_for_element(self.selenium_authenticated, By.XPATH, '//*[@id="next"]')
+
+        # Extract next button from page 1
+        next_page = self.selenium_authenticated.find_element(by=By.XPATH, value='//*[@id="next"]')
+        
+        # Action
+        next_page.click()
+        index_page = self.wait_for_element(self.selenium_authenticated, By.XPATH, "//*[@id='page-index' and @data-page='2']")
+
+        # Expected result for next button
+        data_page2 = index_page.get_attribute("data-page")
+        expected = "2"
+
+        # Check result for next button
+        self.assertEqual(data_page2, expected)
+
+        # Extract cards from page 2
+        cards = self.selenium_authenticated.find_elements_by_class_name('card-body')
+        card_titles = self.selenium_authenticated.find_elements_by_class_name('card-title')
+        card_subtitles = self.selenium_authenticated.find_elements_by_class_name('card-subtitle')
+        card_texts = self.selenium_authenticated.find_elements_by_class_name('card-text')
+
+        # Expected result
+        expected = 2
+
+        # Check results
+        self.assertEqual(len(cards), expected)
+        self.assertEqual(len(card_titles), expected)
+        self.assertEqual(len(card_subtitles), expected)
+        self.assertEqual(len(card_texts), expected)
+        
+        # Extract previous button from page 2
+        previous_page = self.selenium_authenticated.find_element(by=By.XPATH, value='//*[@id="previous"]')
+
+        # Action
+        previous_page.click()
+        index_page = self.wait_for_element(self.selenium_authenticated, By.XPATH, "//*[@id='page-index' and @data-page='1']")
+
+        # Expected result for previous button
+        data_page1 = index_page.get_attribute("data-page")
+        expected = "1"
+
+        # Check result for previous 
+        self.assertEqual(data_page1, expected)
+
+    def test_authenticated_index_page_1_profile_should_load(self):
+        self.selenium_authenticated = self.create_driver()
+        self.login(self.selenium_authenticated)
+        self.selenium_authenticated.get("http://127.0.0.1:8000/")
+
+        self.wait_for_element(self.selenium_authenticated, By.CLASS_NAME, 'card-text')
+
+        # Extract elements from page
+        profile_link = self.selenium_authenticated.find_element(by=By.XPATH, value='//*[@id="posts-list"]/div[1]//a')
+        
+        # Action
+        profile_link.click()
+        
+        # Check result
+        self.assertEqual(self.selenium_authenticated.title, "Profile")
+
+    def test_authenticated_index_page_1_post_can_be_deleted(self):
+
+    def test_authenticated_index_page_1_post_can_be_created(self):
+        self.selenium_authenticated = self.create_driver()
+        self.login(self.selenium_authenticated)
+        self.selenium_authenticated.get("http://127.0.0.1:8000/")
+
+        # Extract field and button from page
+        content_field = self.wait_for_element(self.selenium_authenticated, By.ID, "new-post-content")
+        post_button = self.wait_for_element(self.selenium_authenticated, By.ID, "new-post-button")
+
+        # profile_link = self.selenium_authenticated.find_element(by=By.XPATH, value='//*[@id="posts-list"]/div[1]//a')
+        
+        # Action
+        content_field.send_keys("I saw two cats")
+        post_button.click()
+
+        # Extract new post from page
+        new_post = self.wait_for_element(self.selenium_authenticated, By.XPATH, "//*[@id='posts-list']/div[1]/div/p").text
+        
+        # Check result
+        self.assertEqual(new_post, "I saw two cats")
+
     def tearDown(self):
         self.selenium.quit()
+        # self.selenium_authenticated.quit()
 
-    if __name__ == "__main__":
-        chrome_options = Options()
-        webdriver_service = Service("/home/deborahly/chromedriver/stable/chromedriver")
-        selenium = webdriver.Chrome(service=webdriver_service, options=chrome_options)
-        selenium.get('http://127.0.0.1:8000/')
+    # if __name__ == "__main__":
+    #     chrome_options = Options()
+    #     webdriver_service = Service("/home/deborahly/chromedriver/stable/chromedriver")
+    #     selenium = webdriver.Chrome(service=webdriver_service, options=chrome_options)
+    #     selenium.get('http://127.0.0.1:8000/')
 
-        # Test
-        title = selenium.title
+    #     # Test
+    #     title = selenium.title

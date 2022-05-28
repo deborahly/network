@@ -19,9 +19,6 @@ class NewTestCase(TestCase):
         empty_post = Post.objects.create(poster=user, content="")
         too_long_post = Post.objects.create(poster=user, content="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 
-        # Sets up web driver using Google chrome
-        driver = webdriver.Chrome()
-
     def test_good_post(self):
         user = User.objects.get(username="Gigi")
         p = Post.objects.get(content="My name is Bridgette, but you can call me Gigi.")
