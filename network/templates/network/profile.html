@@ -7,39 +7,39 @@
 
     <section id="profile">
         <h3 id="profile-username">{{ username }}</h3>
-        <h5>Following: <span id="following-count">{{ following|length }}</span></h5>
-        <h5>Followers: <span id="followers-count">{{ followers|length }}</span></h5>
-    </section>
-
-    <section id="posts">
-        <h3>My posts</h3>
-
-        <div id="posts-list" class="posts-list">    
-        </div>
-
-        <nav aria-label="Page navigation">
-            <ul class="pagination">
-                <li class="page-item"><button id="previous">Previous</button></li>
-                <li class="page-item"><button id="next">Next</button></li>
-            </ul>   
-        </nav>
+        <h6 id="following">Following <span id="following-count">{{ following|length }}</span></h6>
+        <h6 id="followers">| Followers <span id="followers-count">{{ followers|length }}</span></h6>
     </section>
 
     <section id="follow">
         {% if user.is_authenticated %}
             {% csrf_token %}
                 {% if f == "True" %} 
-                    <button id="follow-btn" data-active="True">
+                    <button id="follow-btn" data-active="True" class="btn btn-outline-success btn-sm my-btn">
                         Unfollow
                     </button>
                 {% elif user.username == username %}
                     <!-- Do not show any button when user seeing their own profile page -->
                     <div id="follow-btn"></div>
                 {% else %}
-                    <button id="follow-btn" data-active="False">
+                    <button id="follow-btn" data-active="False" class="btn btn-outline-success btn-sm my-btn">
                         Follow
                     </button>
                 {% endif %}
         {% endif %}
+    </section>
+
+    <section id="posts">
+        <h3>{{ username }}'s posts</h3>
+
+        <div id="posts-list" class="posts-list">    
+        </div>
+
+        <nav id="pagination-navbar" class="navbar navbar-expand-lg" aria-label="Page navigation">
+            <ul id="pagination-ul" class="pagination">
+                <li class="page-item"><button id="previous" class="btn btn-outline-primary btn-sm my-btn">Previous</button></li>
+                <li class="page-item"><button id="next" class="btn btn-outline-primary btn-sm my-btn">Next</button></li>
+            </ul>   
+        </nav>
     </section>
 {% endblock %}

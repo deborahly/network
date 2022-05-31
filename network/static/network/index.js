@@ -17,20 +17,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.querySelector('#new-post-content').value = '';
             });
         }
-
-        // document.querySelector('#new-post-form').addEventListener('submit', (event) => {
-        //     event.preventDefault();
-        //     const content = document.querySelector('#new-post-content').value;
-        //     savePost(content, ''); 
-        //     document.querySelector('#new-post-content').value = '';
-        //     // loadPosts('all', 1, '');
-        // });
     }
 
     // When Following page is loaded
     if (title === 'Following') {
         // loadPosts('following', page_index, ''); 
-        loadPosts('following', page_index, ''); 
+        loadPosts('following', page_index, '');
     }
 
     // When Profile page is loaded   
@@ -90,25 +82,25 @@ function loadPosts(view, page, username) {
             
             // Create card elements
             const card = document.createElement('div');
-            card.classList.add("card");
+            card.classList.add("card", "my-card");
             
             const card_body = document.createElement('div');
             card_body.classList.add('card-body');
             card_body.dataset.id = `body-${data.posts[i]['id']}`;
             
             const card_title = document.createElement('h5');
-            card_title.classList.add('card-title');
+            card_title.classList.add('card-title', 'my-card-title');
             
             const profile_link = document.createElement('a');
             profile_link.setAttribute('href', `/profile/${data.posts[i]['poster']}`);
             profile_link.innerHTML = data.posts[i]['poster'];
             
-            const card_subtitle = document.createElement('h7');
-            card_subtitle.classList.add('card-subtitle', 'mb-2', 'text-muted');
-            card_subtitle.innerHTML = `at ${data.posts[i]['created_on']}`;
+            const date = document.createElement('span');
+            date.classList.add('date');
+            date.innerHTML = ` at ${data.posts[i]['created_on']}`;
             
             const card_text = document.createElement('p');
-            card_text.classList.add('card-text');
+            card_text.classList.add('card-text', 'my-card-text');
             card_text.dataset.id = `text-${data.posts[i]['id']}`;
             card_text.innerHTML = data.posts[i]['content'];
 
@@ -117,12 +109,12 @@ function loadPosts(view, page, username) {
             card.append(card_body);
             card_title.append(profile_link);
             card_body.append(card_title);
-            card_body.append(card_subtitle);
+            card_body.append(date);
             card_body.append(card_text);
 
             // Display number of likes
             const likes_indication = document.createElement('span');
-            likes_indication.innerHTML = 'Likes'
+            likes_indication.innerHTML = 'Likes '
             const likes = document.createElement('span');
             likes.innerHTML = `${data.posts[i]['likes']}`;
             likes.dataset.id = `likes-${data.posts[i]['id']}`;
@@ -141,9 +133,9 @@ function loadPosts(view, page, username) {
                     like_link.style.display = 'none';
                 } else {
                     if (data.posts[i]['liked_by_user'] === true) {
-                        like_link.innerHTML = 'Unlike';
+                        like_link.innerHTML = ' Unlike';
                     } else {
-                        like_link.innerHTML = 'Like';
+                        like_link.innerHTML = ' Like';
                     }
                 }
 
@@ -157,18 +149,31 @@ function loadPosts(view, page, username) {
                 })
             }
 
-            // Display edit link
+            // Display edit and delete link
             if (data.posts[i]['user_is_author'] === true) {
                 const edit_link = document.createElement('a');
                 edit_link.classList.add('edit-link');
                 edit_link.setAttribute('href', '#');
                 edit_link.dataset.id = `edit-${data.posts[i]['id']}`;
-                edit_link.innerHTML = 'Edit';
+                edit_link.innerHTML = ' Edit ';
                 card_body.append(edit_link);
-                // Add event listener for edit link
+
+                const delete_link = document.createElement('a');
+                delete_link.classList.add('delete-link');
+                delete_link.setAttribute('href', '#');
+                delete_link.dataset.id = `delete-${data.posts[i]['id']}`;
+                delete_link.innerHTML = ' Delete';
+                card_body.append(delete_link);
+
+                // Add event listener for both links
                 edit_link.addEventListener('click', (event) => {
                     event.preventDefault();
-                    edit(data.posts[i]['id']);
+                    editPost(data.posts[i]['id']);
+                })
+
+                delete_link.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    deletePost(data.posts[i]['id']);
                 })
             }
         }
@@ -324,11 +329,11 @@ function like(post_id) {
         if (data.like_status === 'liked') {
             likes_count += 1;
             document.querySelector(`[data-id="likes-${post_id}"]`).innerHTML = likes_count;
-            like_link.innerHTML = 'Unlike';
+            like_link.innerHTML = ' Unlike';
         } else if (data.like_status === 'unliked') {
             likes_count -= 1;
             document.querySelector(`[data-id="likes-${post_id}"]`).innerHTML = likes_count;
-            like_link.innerHTML = 'Like';
+            like_link.innerHTML = ' Like';
         }
     })
     .catch(error => {
@@ -336,7 +341,7 @@ function like(post_id) {
     });
 }
 
-function edit(post_id) {
+function editPost(post_id) {
     const card_text = document.querySelector(`[data-id="text-${post_id}"]`);
 
     const textarea = document.createElement('textarea');
@@ -354,7 +359,7 @@ function edit(post_id) {
     const save_link = document.createElement('a');
     save_link.classList.add('save-link');
     save_link.setAttribute('href', '#');
-    save_link.innerHTML = 'Save';
+    save_link.innerHTML = ' Save';
     card_body.append(save_link);
 
     // Add event listener for save link
@@ -362,5 +367,38 @@ function edit(post_id) {
         event.preventDefault();
         const content = document.querySelector('#textarea').value;
         savePost(content, post_id);
+    })
+}
+
+function deletePost(post_id) {
+    const csrftoken = getCookie('csrftoken');
+
+    const json_body = {
+        post_id: post_id
+    }
+
+    const requestOptions = {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrftoken,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(json_body),
+        mode: 'same-origin'
+    }
+
+    fetch('http://127.0.0.1:8000/delete', requestOptions)
+    .then(response => response.json())
+    .then(data => {
+        if (data.deleted = true) {
+            const page = document.querySelector('#page-index').dataset.page
+            
+            if (document.title ==='Index') {
+                loadPosts('all', page, '')
+            } else if (document.title === 'Profile') {
+                const username = document.querySelector('#profile-username').innerHTML
+                loadPosts('profile', page, username)
+            }
+        }
     })
 }

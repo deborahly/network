@@ -1,0 +1,111 @@
+/* Index and general styles */
+footer {
+    text-align: center;
+    font-size: smaller;
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+}
+
+footer > p {
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+#new-post {
+    padding-left: 5rem;
+    padding-right: 5rem;
+    padding-top: 1rem;
+    padding-bottom: 0;
+}
+
+#new-post-form {
+    text-align: right;
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+#posts {
+    padding-left: 2rem;
+    padding-right: 2rem;
+    padding-top: 1rem;
+    padding-bottom: 0rem;
+}
+
+#pagination-navbar {
+    align-items: center;
+    justify-content: center;
+}
+
+#pagination-ul {
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    gap: 1rem;
+}
+
+.form-group {
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+}
+
+.date {
+    font-size: small;
+}
+
+.my-btn {
+    width: 4.5rem;
+}
+
+.my-card {
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+
+.my-card-title {
+    display: inline;
+}
+
+.my-card-text {
+    padding-left: 0;
+    padding-right: 0;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+/* Profile styles */
+#follow {
+    text-align: center;
+}
+
+#profile {
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    text-align: center;
+}
+
+#following {
+    display: inline;
+}
+
+#followers {
+    display: inline;
+}
+
+/* Following styles */

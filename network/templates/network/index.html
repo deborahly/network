@@ -7,7 +7,7 @@
 
     <section id="new-post">
         {% if user.is_authenticated %}
-            <h3>Create new post</h3>
+            <h4>Create new post</h4>
             
             <form id="new-post-form">
                 {% csrf_token %}
@@ -15,7 +15,7 @@
                     <input id="new-post-content" type="text" class="form-control" aria-describedby="contentHelp" placeholder="Say it to the Internet">
                     <small id="contentHelp" class="form-text text-muted">Be mindful with personal information disclosure.</small>
                 </div>
-                <button id="new-post-button" type="submit" class="btn btn-primary">Post</button>
+                <button id="new-post-button" type="submit" class="btn btn-primary btn-sm my-btn">Post</button>
             </form>
         {% endif %}
     </section>
@@ -26,10 +26,10 @@
         <div id="posts-list" class="posts-list">    
         </div>
 
-        <nav aria-label="Page navigation">
-            <ul class="pagination">
-                <li class="page-item"><button id="previous">Previous</button></li>
-                <li class="page-item"><button id="next">Next</button></li>
+        <nav id="pagination-navbar" class="navbar navbar-expand-lg" aria-label="Page navigation">
+            <ul id="pagination-ul" class="pagination">
+                <li class="page-item"><button id="previous" class="btn btn-outline-primary btn-sm my-btn">Previous</button></li>
+                <li class="page-item"><button id="next" class="btn btn-outline-primary btn-sm my-btn">Next</button></li>
             </ul>   
         </nav>
     </section>
