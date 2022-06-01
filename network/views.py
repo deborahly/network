@@ -276,3 +276,20 @@ def save(request):
             return JsonResponse({
                 "message": "Content cannot be empty nor contain more than 150 characters."
             }, status=400)
+
+@login_required
+def delete(request):
+    if request.method != "POST":
+        return JsonResponse({
+            "message": "POST request required."
+        }, status=400) 
+    # Get data
+    data = json.loads(request.body)
+    post_id = data.get("post_id", "")
+    # Get post and delete it
+    post = Post.objects.get(pk=post_id)
+    post.delete()
+
+    return JsonResponse ({
+        "deleted": True
+    })
