@@ -14,7 +14,6 @@ from .models import User, Post, Follow, Like
 def index(request):
     return render(request, "network/index.html")
 
-
 @login_required
 def following(request):
     return render(request, "network/following.html")
@@ -101,7 +100,7 @@ def posts(request):
         poster = User.objects.get(username=username)
         posts = Post.objects.filter(poster=poster)
     # Add paginator
-    per_page = 2
+    per_page = 10
     paginator = Paginator(posts, per_page)
     page_object = paginator.get_page(page_number)
     # Serialize objects
@@ -110,17 +109,7 @@ def posts(request):
         dict = post.serialize()
         posts_on_page.append(dict)
     if request.user.is_authenticated:
-        # Add number of likes and whether request user like post
-        # for post in page_object.object_list:
-        #     if post.likes_received.filter(liked_by=request.user).exists():
-        #         post.update({"user_is_author": True})
-        #     else:
-        #         post.update({"user_is_author": False})
-            #     dict = post.serialize1()
-            #     posts.append(dict)
-            # else:
-            #     dict = post.serialize2()
-            #     posts.append(dict)
+        # Add whether request user likes post
         for i in range(len(page_object.object_list)):
             if page_object.object_list[i].likes_received.filter(liked_by=request.user).exists():
                 posts_on_page[i].update({"liked_by_user": True})
@@ -142,7 +131,6 @@ def posts(request):
         "posts": posts_on_page
     }
     return JsonResponse(payload, safe=False)
-
 
 @login_required
 def like(request):
@@ -202,7 +190,6 @@ def login_view(request):
     else:
         return render(request, "network/login.html")
 
-
 @login_required
 def logout_view(request):
     logout(request)
@@ -234,7 +221,6 @@ def register(request):
         return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "network/register.html")
-
 
 @login_required
 def save(request):

@@ -177,18 +177,18 @@ function loadPosts(view, page, username) {
                 })
             }
         }
-        
+
         // Display previous/next buttons, when applicable
         if (data.page.has_previous === false && data.page.has_next === false) {
             document.querySelector('.pagination').innerHTML = '';
-        }
-        
+        }     
+
         if (data.page.has_previous === false && data.page.has_next === true) {
             document.querySelector('#previous').setAttribute('disabled', 'true');
         } else {
             document.querySelector('#previous').removeAttribute('disabled');
         }
-
+        
         if (data.page.has_previous === true && data.page.has_next === false) {
             document.querySelector('#next').setAttribute('disabled', 'true');
         } else {
